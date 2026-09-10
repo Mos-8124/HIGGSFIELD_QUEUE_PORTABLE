@@ -35,6 +35,7 @@ byteplus_queue_db.json
 byteplus_kol_library.json
 byteplus_mock_jobs.json
 byteplus_usage.json
+*.backup.json
 byteplus_uploads/
 byteplus_outputs/
 *.corrupt-*
