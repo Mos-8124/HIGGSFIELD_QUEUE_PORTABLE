@@ -94,10 +94,13 @@
                             <button id="btn-stop" class="btn btn-danger" disabled title="Dừng hàng chờ và hủy task đang chạy">
                                 <span class="icon">⏹</span> Dừng
                             </button>
-                            <button id="btn-clear" class="btn btn-secondary" title="Dọn dẹp các task đã hoàn thành">
+                            <button id="btn-clear" class="btn btn-secondary" title="Dọn dẹp các task đã hoàn thành trên giao diện">
                                 <span class="icon">🧹</span> Dọn Đã Xong
                             </button>
-                            </div>
+                            <button id="btn-restore-tasks" class="btn btn-outline" style="display:none;" title="Khôi phục hiển thị task đã hoàn thành">
+                                <span class="icon">👁️</span> Hiện Đã Xong
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -450,9 +453,19 @@
                                 </div>
                             </div>
                             
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <h4 style="margin:0; color: #e2e8f0;">Lịch Sử Chi Phí & Tiêu Hao Tín Dụng</h4>
-                                <span style="font-size:11px; color:#94a3b8;">Actual Credits lấy trực tiếp từ Kie (Never Fabricated)</span>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                                <div>
+                                    <h4 style="margin:0; color: #e2e8f0;">Lịch Sử Chi Phí & Tiêu Hao Tín Dụng</h4>
+                                    <span style="font-size:11px; color:#94a3b8;">Actual Credits lấy trực tiếp từ Kie (Never Fabricated)</span>
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <button type="button" id="btn-clear-usage" class="btn btn-secondary btn-xs" style="padding: 5px 12px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Dọn sạch hiển thị lịch sử chi phí trên UI (Backend bảo toàn 100%)">
+                                        <span>🧹</span> Dọn Lịch Sử UI
+                                    </button>
+                                    <button type="button" id="btn-restore-usage" class="btn btn-outline btn-xs" style="padding: 5px 12px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Khôi phục hiển thị dữ liệu lịch sử chi phí">
+                                        <span>👁️</span> Hiện Lại
+                                    </button>
+                                </div>
                             </div>
                             <div class="table-container" style="max-height: 480px; overflow: auto; border: 1px solid #334155; border-radius: 6px;">
                                 <table class="data-table usage-table" style="width: 100%; min-width: 1150px; font-size: 12px; border-collapse: collapse;">
