@@ -7,6 +7,14 @@
 const socket = io('/byteplus');
 
 // Application State
+// Clean up any legacy cleared states from localStorage
+try {
+    localStorage.removeItem('hg_cleared_task_ids');
+    localStorage.removeItem('hg_cleared_usage_time');
+    localStorage.removeItem('hg_cleared_completed_ui');
+    localStorage.removeItem('hg_cleared_usage_ui');
+} catch (e) {}
+
 let appState = {
     isRunning: false,
     isPaused: false,
@@ -20,9 +28,7 @@ let appState = {
     selectedImageName: null,
     autoScrollLogs: true,
     currentPage: 1,
-    pageSize: 15,
-    clearedCompletedUI: localStorage.getItem('hg_cleared_completed_ui') !== 'false',
-    clearedUsageUI: localStorage.getItem('hg_cleared_usage_ui') !== 'false'
+    pageSize: 15
 };
 
 // =========================================================================
@@ -46,10 +52,6 @@ const el = {
     btnStart: document.getElementById('btn-start'),
     btnPause: document.getElementById('btn-pause'),
     btnStop: document.getElementById('btn-stop'),
-    btnClear: document.getElementById('btn-clear'),
-    btnRestoreTasks: document.getElementById('btn-restore-tasks'),
-    btnClearUsage: document.getElementById('btn-clear-usage'),
-    btnRestoreUsage: document.getElementById('btn-restore-usage'),
 
     // Forms & Inputs
     singleForm: document.getElementById('single-form'),
@@ -393,19 +395,12 @@ function updateUI() {
 }
 
 function calculateStats(tasks) {
-    const isCompletedCleared = !!appState.clearedCompletedUI;
-    const completedList = tasks.filter(t => t.status === 'completed');
-    const visibleCompleted = isCompletedCleared ? 0 : completedList.length;
-    const pending = tasks.filter(t => t.status === 'pending').length;
-    const running = tasks.filter(t => t.status === 'running').length;
-    const failed = tasks.filter(t => t.status === 'failed').length;
     return {
-        total: pending + running + failed + visibleCompleted,
-        pending,
-        running,
-        completed: visibleCompleted,
-        failed,
-        actualCompleted: completedList.length
+        total: tasks.length,
+        pending: tasks.filter(t => t.status === 'pending').length,
+        running: tasks.filter(t => t.status === 'running').length,
+        completed: tasks.filter(t => t.status === 'completed').length,
+        failed: tasks.filter(t => t.status === 'failed').length
     };
 }
 
@@ -424,19 +419,11 @@ function updateHeaderBadges() {
 }
 
 function updateStatsDisplay() {
-    const s = calculateStats(appState.tasks);
-    appState.stats = s;
+    const s = appState.stats || calculateStats(appState.tasks);
     if (el.statTotal) el.statTotal.textContent = s.total || 0;
     if (el.statPending) el.statPending.textContent = s.pending || 0;
     if (el.statRunning) el.statRunning.textContent = s.running || 0;
-    if (el.statCompleted) {
-        el.statCompleted.textContent = s.completed || 0;
-        if (appState.clearedCompletedUI && s.actualCompleted > 0) {
-            el.statCompleted.title = `Đã dọn dẹp hiển thị trên UI (${s.actualCompleted} task hoàn thành được lưu an toàn ở backend)`;
-        } else {
-            el.statCompleted.removeAttribute('title');
-        }
-    }
+    if (el.statCompleted) el.statCompleted.textContent = s.completed || 0;
     if (el.statFailed) el.statFailed.textContent = s.failed || 0;
     if (el.queueCount) el.queueCount.textContent = s.total || 0;
 
@@ -524,14 +511,6 @@ function updateControlButtons() {
             el.btnPause.title = 'Tạm dừng hàng chờ';
         }
         if (el.btnStop) el.btnStop.disabled = !hasRunningTask;
-    }
-
-    const hasCompleted = appState.tasks.some(t => t.status === 'completed');
-    if (el.btnClear) {
-        el.btnClear.disabled = (!hasCompleted || appState.clearedCompletedUI);
-    }
-    if (el.btnRestoreTasks) {
-        el.btnRestoreTasks.style.display = (appState.clearedCompletedUI && hasCompleted) ? 'inline-flex' : 'none';
     }
 }
 
@@ -658,17 +637,7 @@ function renderQueueTable() {
 
     // Filter theo Status
     if (appState.activeFilter !== 'all') {
-        if (appState.activeFilter === 'completed' && appState.clearedCompletedUI) {
-            filtered = [];
-        } else {
-            filtered = filtered.filter(t => t.status === appState.activeFilter);
-        }
-    } else if (appState.clearedCompletedUI) {
-        // PER USER REQUIREMENT:
-        // "Cái nút Dọn đã xong là chỉ dọn trên UI thôi backend thì ko nhá đừng có mà dọn cả backend đấy"
-        // "xong e xoá hết lịch sử chi phí và tiêu hao tín dụng đi cho a. xoá luôn cả mấy cái task đã hoàn thành nữa. Nhưng chỉ xoá trên UI thôi nhé backend thì để nguyên"
-        // Ở tab "Tất Cả", ẩn các task completed mà người dùng đã bấm "Dọn Đã Xong" trên UI
-        filtered = filtered.filter(t => t.status !== 'completed');
+        filtered = filtered.filter(t => t.status === appState.activeFilter);
     }
 
     // Filter theo Search Query
@@ -729,24 +698,13 @@ function renderQueueTable() {
     });
 
     if (filtered.length === 0) {
-        const hasCompletedTasks = appState.tasks.some(t => t.status === 'completed');
-        const isCompletedCleared = appState.clearedCompletedUI && hasCompletedTasks && (appState.activeFilter === 'all' || appState.activeFilter === 'completed');
         el.queueTableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center empty-msg">
                     <div class="empty-state">
-                        <span class="empty-icon">${isCompletedCleared ? '✨' : '📭'}</span>
-                        <p>${isCompletedCleared 
-                            ? (appState.activeFilter === 'completed' 
-                                ? 'Các task đã hoàn thành đã được dọn sạch trên giao diện.' 
-                                : 'Màn hình đã được dọn sạch sẽ (Các task đã hoàn thành đang ẩn trên UI).')
-                            : (appState.tasks.length === 0 ? 'Chưa có task nào trong hàng chờ.' : 'Không tìm thấy task phù hợp với bộ lọc.')}</p>
-                        ${isCompletedCleared ? `
-                            <small style="color: #94a3b8; display: block; margin-top: 4px;">(Toàn bộ video và dữ liệu máy chủ backend vẫn được bảo toàn nguyên vẹn 100%)</small>
-                            <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
-                                <button type="button" class="btn-xs" style="background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); padding: 5px 12px; border-radius: 4px; cursor: pointer;" onclick="window.restoreClearedTasks()">👁️ Hiện Lại Task Đã Hoàn Thành</button>
-                            </div>
-                        ` : '<small>Tạo task mới từ biểu mẫu bên trái để bắt đầu tạo video.</small>'}
+                        <span class="empty-icon">📭</span>
+                        <p>${appState.tasks.length === 0 ? 'Chưa có task nào trong hàng chờ.' : 'Không tìm thấy task phù hợp với bộ lọc.'}</p>
+                        <small>Tạo task mới từ biểu mẫu bên trái để bắt đầu tạo video.</small>
                     </div>
                 </td>
             </tr>
@@ -1889,43 +1847,6 @@ if (el.btnPause) el.btnPause.addEventListener('click', () => {
 
 if (el.btnStop) el.btnStop.addEventListener('click', () => sendControl('stop'));
 
-if (el.btnClear) {
-    el.btnClear.addEventListener('click', () => {
-        const completedTasks = appState.tasks.filter(t => t.status === 'completed');
-        if (completedTasks.length === 0) {
-            appendLog({ level: 'info', message: 'ℹ️ Không có task đã hoàn thành nào trên bảng để dọn dẹp.' });
-            return;
-        }
-
-        const count = completedTasks.length;
-        // YÊU CẦU NGHIÊM NGẶT CỦA USER:
-        // "Cái nút Dọn đã xong là chỉ dọn trên UI thôi backend thì ko nhá đừng có mà dọn cả backend đấy"
-        // "xong e xoá hết lịch sử chi phí và tiêu hao tín dụng đi cho a. xoá luôn cả mấy cái task đã hoàn thành nữa. Nhưng chỉ xoá trên UI thôi nhé backend thì để nguyên"
-        // Chỉ ẩn trên giao diện (UI-only), tuyệt đối KHÔNG xóa khỏi database backend hay ổ đĩa.
-        appState.clearedCompletedUI = true;
-        localStorage.setItem('hg_cleared_completed_ui', 'true');
-
-        updateUI();
-        appendLog({ 
-            level: 'info', 
-            message: `🧹 Đã dọn sạch ${count} task hoàn thành trên giao diện (Dữ liệu database & video backend vẫn bảo toàn 100%).` 
-        });
-    });
-}
-
-// Cho phép khôi phục lại các task đã dọn hiển thị lại trên UI
-window.restoreClearedTasks = () => {
-    appState.clearedCompletedUI = false;
-    localStorage.setItem('hg_cleared_completed_ui', 'false');
-    updateUI();
-    const count = appState.tasks.filter(t => t.status === 'completed').length;
-    appendLog({ level: 'info', message: `👁️ Đã khôi phục hiển thị ${count} task đã hoàn thành trên bảng điều khiển.` });
-};
-
-if (el.btnRestoreTasks) {
-    el.btnRestoreTasks.addEventListener('click', window.restoreClearedTasks);
-}
-
 async function sendControl(action) {
     try {
         await fetch('/api/byteplus/queue/control', {
@@ -2180,44 +2101,11 @@ async function loadUsageSummary() {
             if (cliBalanceEl) cliBalanceEl.textContent = 'N/A';
         }
 
-        // 2. Update Total Actual Consumed & History Table
-        const consumedEl = document.getElementById('usage-total-consumed');
-        const consumedUsdEl = document.getElementById('usage-total-consumed-usd');
-        const tbody = document.getElementById('usage-table-body');
-        const btnClearUsage = document.getElementById('btn-clear-usage');
-        const btnRestoreUsage = document.getElementById('btn-restore-usage');
-
-        if (btnClearUsage) btnClearUsage.disabled = appState.clearedUsageUI;
-        if (btnRestoreUsage) btnRestoreUsage.disabled = !appState.clearedUsageUI;
-
-        // USER EXPLICIT REQUIREMENT:
-        // "xong e xoá hết lịch sử chi phí và tiêu hao tín dụng đi cho a. xoá luôn cả mấy cái task đã hoàn thành nữa. Nhưng chỉ xoá trên UI thôi nhé backend thì để nguyên"
-        if (appState.clearedUsageUI) {
-            if (consumedEl) consumedEl.textContent = '0 cr';
-            if (consumedUsdEl) consumedUsdEl.textContent = '$0.00 USD';
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="13" style="padding: 30px 16px; color: #94a3b8; text-align: left;">
-                            <div style="display:flex; flex-direction:column; align-items:flex-start; max-width: 380px; gap:8px; padding-left: 10px;">
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <span style="font-size: 22px;">✨</span>
-                                    <span style="font-size: 13px; font-weight: 600; color: #cbd5e1;">Lịch sử chi phí đã dọn sạch trên giao diện.</span>
-                                </div>
-                                <span style="font-size: 11px; color: #64748b;">(Toàn bộ nhật ký và dữ liệu thực tế tại backend vẫn được bảo toàn nguyên vẹn 100%)</span>
-                                <button type="button" class="btn btn-secondary btn-xs" onclick="window.restoreUsageUI()" style="margin-top: 6px; font-size: 11px; padding: 5px 12px; cursor: pointer;">
-                                    👁️ Hiện Lại Toàn Bộ Lịch Sử
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-            return;
-        }
-
+        // 2. Update Total Actual Consumed
         if (data.usageSummary) {
             const sum = data.usageSummary;
+            const consumedEl = document.getElementById('usage-total-consumed');
+            const consumedUsdEl = document.getElementById('usage-total-consumed-usd');
             
             // Tính tổng tiêu hao từ danh sách bản ghi
             let totalActualCredits = 0;
@@ -2371,23 +2259,6 @@ document.getElementById('btn-refresh-usage')?.addEventListener('click', async ()
 
 // Initial load
 setTimeout(loadUsageSummary, 300);
-
-window.clearUsageUI = () => {
-    appState.clearedUsageUI = true;
-    localStorage.setItem('hg_cleared_usage_ui', 'true');
-    loadUsageSummary();
-    appendLog({ level: 'info', message: '🧹 Đã dọn sạch hiển thị lịch sử chi phí trên giao diện (Backend giữ nguyên 100%).' });
-};
-
-window.restoreUsageUI = () => {
-    appState.clearedUsageUI = false;
-    localStorage.setItem('hg_cleared_usage_ui', 'false');
-    loadUsageSummary();
-    appendLog({ level: 'info', message: '👁️ Đã khôi phục hiển thị lịch sử chi phí & tiêu hao tín dụng.' });
-};
-
-document.getElementById('btn-clear-usage')?.addEventListener('click', window.clearUsageUI);
-document.getElementById('btn-restore-usage')?.addEventListener('click', window.restoreUsageUI);
 
 
 // =========================================================================
