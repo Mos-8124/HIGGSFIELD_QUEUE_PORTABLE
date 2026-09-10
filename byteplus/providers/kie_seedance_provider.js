@@ -77,8 +77,8 @@ export function normalizeKieFailure(failCode, failMsg) {
 
 export class KieSeedanceProvider {
     constructor({
-        apiKey = config.kie?.apiKey,
-        baseUrl = config.kie?.baseUrl,
+        apiKey,
+        baseUrl,
         model = config.kie?.model,
         pollIntervalMs = config.kie?.pollIntervalMs,
         pollTimeoutMs = config.kie?.pollTimeoutMs,
@@ -86,13 +86,29 @@ export class KieSeedanceProvider {
         fetchFn
     } = {}) {
         this.name = 'kie';
-        this.apiKey = apiKey || '';
-        this.baseUrl = (baseUrl || 'https://api.kie.ai').replace(/\/+$/, '');
+        this._explicitApiKey = apiKey;
+        this._explicitBaseUrl = baseUrl;
         this.model = model || 'bytedance/seedance-2-5';
         this.pollIntervalMs = Number.isFinite(pollIntervalMs) ? pollIntervalMs : 5000;
         this.pollTimeoutMs = Number.isFinite(pollTimeoutMs) ? pollTimeoutMs : 900000;
         this.callbackUrl = callbackUrl || '';
         this.fetchFn = fetchFn;
+    }
+
+    get apiKey() {
+        return this._explicitApiKey !== undefined ? this._explicitApiKey : (config.kie?.apiKey || process.env.KIE_API_KEY || '');
+    }
+
+    set apiKey(val) {
+        this._explicitApiKey = val;
+    }
+
+    get baseUrl() {
+        return (this._explicitBaseUrl !== undefined ? this._explicitBaseUrl : (config.kie?.baseUrl || process.env.KIE_BASE_URL || 'https://api.kie.ai')).replace(/\/+$/, '');
+    }
+
+    set baseUrl(val) {
+        this._explicitBaseUrl = val;
     }
 
     isConfigured() {

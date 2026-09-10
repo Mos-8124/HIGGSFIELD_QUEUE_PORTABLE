@@ -10,12 +10,17 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
+let _lastEnvMtime = 0;
+
 // Tự động nạp file .env từ thư mục gốc nếu có (trừ khi đang chạy test tự động)
-function loadDotenv() {
+export function loadDotenv(force = false) {
     if (process.env.NODE_ENV === 'test' || process.env.npm_lifecycle_event === 'test' || process.argv.some(a => a.includes('test'))) return;
     const envFile = path.join(ROOT, '.env');
     if (!fs.existsSync(envFile)) return;
     try {
+        const stat = fs.statSync(envFile);
+        if (!force && stat.mtimeMs === _lastEnvMtime) return;
+        _lastEnvMtime = stat.mtimeMs;
         const lines = fs.readFileSync(envFile, 'utf8').split('\n');
         for (const line of lines) {
             const trimmed = line.trim();
@@ -27,9 +32,7 @@ function loadDotenv() {
             if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
                 v = v.slice(1, -1);
             }
-            if (process.env[k] === undefined || process.env[k] === '') {
-                process.env[k] = v;
-            }
+            process.env[k] = v;
         }
     } catch (_) {}
 }
@@ -99,17 +102,17 @@ export const config = {
 
     // Cấu hình Kie.ai — LUỒNG ACTIVE. Bí mật duy nhất người dùng phải điền là KIE_API_KEY.
     kie: {
-        get apiKey() { return process.env.KIE_API_KEY || ''; },
-        get baseUrl() { return process.env.KIE_BASE_URL || 'https://api.kie.ai'; },
-        get uploadBaseUrl() { return process.env.KIE_UPLOAD_BASE_URL || 'https://kieai.redpandaai.co'; },
-        get model() { return process.env.KIE_VIDEO_MODEL || 'bytedance/seedance-2-5'; },
+        get apiKey() { loadDotenv(); return process.env.KIE_API_KEY || ''; },
+        get baseUrl() { loadDotenv(); return process.env.KIE_BASE_URL || 'https://api.kie.ai'; },
+        get uploadBaseUrl() { loadDotenv(); return process.env.KIE_UPLOAD_BASE_URL || 'https://kieai.redpandaai.co'; },
+        get model() { loadDotenv(); return process.env.KIE_VIDEO_MODEL || 'bytedance/seedance-2-5'; },
         get modelName() { return 'Kie.ai — ByteDance Seedance 2.5'; },
-        get uploadPath() { return process.env.KIE_UPLOAD_PATH || 'gtf-video-ai'; },
-        get fileTtlHours() { return int('KIE_FILE_TTL_HOURS', 24); },
-        get maxConcurrency() { return int('KIE_MAX_CONCURRENCY', 1); },
-        get pollIntervalMs() { return int('KIE_POLL_INTERVAL_MS', 5000); },
-        get pollTimeoutMs() { return int('KIE_POLL_TIMEOUT_MS', 900000); },
-        get callbackUrl() { return process.env.KIE_CALLBACK_URL || ''; }
+        get uploadPath() { loadDotenv(); return process.env.KIE_UPLOAD_PATH || 'gtf-video-ai'; },
+        get fileTtlHours() { loadDotenv(); return int('KIE_FILE_TTL_HOURS', 24); },
+        get maxConcurrency() { loadDotenv(); return int('KIE_MAX_CONCURRENCY', 1); },
+        get pollIntervalMs() { loadDotenv(); return int('KIE_POLL_INTERVAL_MS', 5000); },
+        get pollTimeoutMs() { loadDotenv(); return int('KIE_POLL_TIMEOUT_MS', 900000); },
+        get callbackUrl() { loadDotenv(); return process.env.KIE_CALLBACK_URL || ''; }
     },
 
     // Cấu hình ModelArk / Seedance thật

@@ -98,15 +98,15 @@ export function normalizeKieHttpError(status, body, fallbackCode) {
 
 export class KieFileStorageProvider {
     constructor({
-        apiKey = config.kie?.apiKey,
-        uploadBaseUrl = config.kie?.uploadBaseUrl,
+        apiKey,
+        uploadBaseUrl,
         uploadPath = config.kie?.uploadPath,
         fileTtlHours = config.kie?.fileTtlHours,
         fetchFn
     } = {}) {
         this.name = 'kie';
-        this.apiKey = apiKey || '';
-        this.uploadBaseUrl = (uploadBaseUrl || 'https://kieai.redpandaai.co').replace(/\/+$/, '');
+        this._explicitApiKey = apiKey;
+        this._explicitUploadBaseUrl = uploadBaseUrl;
         this.uploadPath = uploadPath || 'gtf-video-ai';
         this.fileTtlHours = Number.isFinite(fileTtlHours) ? fileTtlHours : 24;
         this.fetchFn = fetchFn;
@@ -117,6 +117,22 @@ export class KieFileStorageProvider {
         this.notConfiguredCode = 'KIE_UPLOAD_NOT_CONFIGURED';
         this.notConfiguredMessage =
             'KIE_UPLOAD_NOT_CONFIGURED: Chưa cấu hình KIE_API_KEY trong file .env nên không thể tải ảnh/video tham chiếu lên Kie.ai.';
+    }
+
+    get apiKey() {
+        return this._explicitApiKey !== undefined ? this._explicitApiKey : (config.kie?.apiKey || process.env.KIE_API_KEY || '');
+    }
+
+    set apiKey(val) {
+        this._explicitApiKey = val;
+    }
+
+    get uploadBaseUrl() {
+        return (this._explicitUploadBaseUrl !== undefined ? this._explicitUploadBaseUrl : (config.kie?.uploadBaseUrl || 'https://kieai.redpandaai.co')).replace(/\/+$/, '');
+    }
+
+    set uploadBaseUrl(val) {
+        this._explicitUploadBaseUrl = val;
     }
 
     isConfigured() {

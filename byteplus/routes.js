@@ -6,7 +6,7 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { config, providerStatus } from './config.js';
+import { config, providerStatus, loadDotenv } from './config.js';
 import { byteplusMultipart, classify } from './multipart.js';
 import { newReferenceId } from './reference_manager.js';
 import { ValidationError } from './task_factory.js';
@@ -30,6 +30,7 @@ export function createByteplusRouter({ queue, kols }) {
 
     router.get('/account/credits', async (req, res) => {
         try {
+            loadDotenv();
             let balance = null;
             let error = null;
 
@@ -80,6 +81,7 @@ export function createByteplusRouter({ queue, kols }) {
 
     // ── trang thai & cau hinh ──────────────────────────────────────────────
     router.get('/status', (req, res) => {
+        loadDotenv();
         const isKie = config.provider === 'kie';
         const isTosConfigured = Boolean(config.tos.accessKey && config.tos.secretKey && config.tos.bucket && config.tos.region);
         res.json({
