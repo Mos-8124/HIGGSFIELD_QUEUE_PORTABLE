@@ -1,0 +1,1603 @@
+PLAN Hoàn thiện tool tạo video:
+
+
+Ok, giờ đã đủ dữ kiện để **chốt plan implementation**. Mình sẽ viết theo hướng sau này đưa thẳng cho Agent làm, không còn bàn kiến trúc nữa.
+
+# PLAN CHÍNH THỨC — GTF VIDEO AI AUTOMATION V2
+
+## Mục tiêu cuối
+
+Giữ nguyên hoàn toàn hệ thống Higgsfield hiện tại.
+
+Từ:
+
+```text
+http://localhost:3100/
+```
+
+người dùng thấy Gateway:
+
+```text
+GTF VIDEO AI AUTOMATION
+
+┌─────────────────────────────┐
+│ ✨ NEW VIDEO AI SYSTEM     │
+│ Recommended                 │
+│                             │
+│ [ USE NEW SYSTEM ]          │
+└─────────────────────────────┘
+
+┌─────────────────────────────┐
+│ HIGGSFIELD CLASSIC          │
+│ Existing stable system      │
+│                             │
+│ [ USE OLD SYSTEM ]          │
+└─────────────────────────────┘
+```
+
+Hai hệ thống:
+
+```text
+:3100
+│
+├── /higgsfield
+│      └── HỆ THỐNG CŨ
+│          không sửa logic/UI
+│
+└── /byteplus
+       └── HỆ THỐNG MỚI
+           queue riêng
+           UI riêng
+           state riêng
+           DB riêng
+           worker riêng
+           provider riêng
+```
+
+Hiện tại hệ thống mới chạy:
+
+```text
+MOCK MODE
+```
+
+Sau này:
+
+```text
+gắn credential
+→ chuyển provider
+→ BytePlus Seedance 2.5 thật
+```
+
+---
+
+# Nguyên tắc bắt buộc
+
+### Hệ thống cũ
+
+**KHÔNG ĐỘNG VÀO.**
+
+Không:
+
+* refactor `video_generate.js`;
+* refactor `cli_generate.js`;
+* sửa behavior queue cũ;
+* sửa UI cũ;
+* đổi schema `queue_db.json`;
+* dùng chung state với hệ thống mới;
+* dùng chung queue control với hệ thống mới.
+
+Chỉ làm tối thiểu những gì cần thiết để route người dùng tới giao diện cũ.
+
+---
+
+# PHASE 1 — Gateway + phân tách 2 hệ thống
+
+## Mục tiêu
+
+Port vẫn:
+
+```text
+3100
+```
+
+nhưng `/` trở thành landing page.
+
+Routes:
+
+```text
+/
+→ Gateway
+
+/higgsfield
+→ Old Higgsfield System
+
+/byteplus
+→ GTF Video AI Studio
+```
+
+### Landing page
+
+Thông điệp:
+
+> Xin chào! Chào mừng bạn đến với GTF Video AI Automation.
+
+Hai option:
+
+### New System
+
+```text
+GTF Video AI Studio
+Recommended
+```
+
+UI nổi bật hơn.
+
+### Old System
+
+```text
+Higgsfield Classic
+Existing System
+```
+
+Không thay đổi giao diện bên trong.
+
+### Acceptance
+
+* `/` mở Gateway.
+* `/higgsfield` chạy hệ thống cũ bình thường.
+* `/byteplus` mở hệ thống mới.
+* Restart server không ảnh hưởng old queue.
+* Regression old system PASS.
+
+---
+
+# PHASE 2 — Backend hoàn toàn mới cho BytePlus
+
+Tạo namespace riêng:
+
+```text
+/api/byteplus/*
+```
+
+Không dùng:
+
+```text
+/api/queue/*
+```
+
+của Higgsfield.
+
+## State mới
+
+Ví dụ:
+
+```javascript
+byteplusState = {
+    isRunning: true,
+    isPaused: false,
+
+    maxConcurrency: 10,
+
+    activeTasks: {},
+    queue: []
+}
+```
+
+DB riêng:
+
+```text
+byteplus_queue_db.json
+```
+
+Không để task BytePlus xuất hiện trong:
+
+```text
+queue_db.json
+```
+
+---
+
+# PHASE 3 — Queue Engine mới, rolling concurrency = 10
+
+Đây là core của hệ thống.
+
+Không chạy:
+
+```text
+1 task
+→ xong
+→ task tiếp
+```
+
+Mà:
+
+```text
+MAX CONCURRENCY = 10
+```
+
+Ví dụ:
+
+```text
+Task 01 ───── running
+Task 02 ───── running
+Task 03 ───── running
+...
+Task 10 ───── running
+
+Task 11 ───── waiting
+Task 12 ───── waiting
+```
+
+Khi:
+
+```text
+Task 04 completed
+```
+
+thì ngay lập tức:
+
+```text
+Task 11
+→ running
+```
+
+Không chờ cả batch 10 hoàn thành.
+
+### Scheduler
+
+Logic:
+
+```text
+while queue active
+AND activeCount < maxConcurrency
+
+→ lấy pending task tiếp theo
+→ dispatch
+```
+
+Config:
+
+```env
+BYTEPLUS_MAX_CONCURRENCY=10
+```
+
+Không hard-code sâu trong worker.
+
+---
+
+# PHASE 4 — Task schema mới
+
+Task mới phải đủ dữ liệu cho Seedance trong tương lai.
+
+Ví dụ:
+
+```javascript
+{
+  id,
+
+  creator,
+  taskName,
+
+  prompt,
+
+  references: [],
+
+  duration: 4,
+  aspectRatio: "9:16",
+  resolution: "480p",
+
+  status: "pending",
+
+  pipelineStage: null,
+  progress: 0,
+
+  provider: "mock",
+
+  providerTaskId: null,
+  providerStatus: null,
+
+  attempts: 0,
+  maxRetries: 2,
+
+  outputUrl: null,
+  localOutputPath: null,
+
+  createdAt,
+  startedAt,
+  completedAt,
+
+  error: null
+}
+```
+
+Reference không nên tách cứng:
+
+```text
+imagePaths
+videoPaths
+```
+
+mà nên chuẩn hóa:
+
+```javascript
+references: [
+  {
+    id: "ref_x",
+    type: "image",
+    source: "upload",
+    index: 1
+  },
+  {
+    id: "ref_y",
+    type: "video",
+    source: "upload",
+    index: 1
+  },
+  {
+    id: "ref_z",
+    type: "kol",
+    source: "library"
+  }
+]
+```
+
+Sau này dễ mở rộng hơn.
+
+---
+
+# PHASE 5 — Reference Manager
+
+Đây là layer cực quan trọng.
+
+Không để worker biết file đến từ đâu.
+
+Kiến trúc:
+
+```text
+Reference Manager
+│
+├── Local Upload
+├── Image Transport
+├── Video Transport
+└── KOL Asset Transport
+```
+
+Interface dạng:
+
+```text
+prepareReference()
+cleanupReference()
+```
+
+---
+
+# PHASE 6 — Image Reference
+
+User có thể:
+
+```text
++ Upload Image
+```
+
+Hệ thống:
+
+* lưu local;
+* preview;
+* reorder;
+* rename reference nếu cần;
+* gán:
+
+```text
+@Image 1
+@Image 2
+@Image 3
+```
+
+Mock mode:
+
+```text
+prepare image
+→ mock ready
+```
+
+Real BytePlus sau này:
+
+```text
+local image
+→ Base64 / supported transport
+→ Seedance
+```
+
+---
+
+# PHASE 7 — Video Reference + TOS architecture
+
+User:
+
+```text
++ Upload Video
+```
+
+UX vẫn cực đơn giản.
+
+Backend chuẩn bị architecture:
+
+```text
+Local Video
+      ↓
+VideoReferenceTransport
+      ↓
+MockTosTransport       NOW
+      ↓
+TosTransport           LATER
+      ↓
+HTTPS URL
+      ↓
+Seedance
+```
+
+Hiện tại không có credential:
+
+```text
+Mock TOS upload
+```
+
+nhưng data model phải lưu sẵn các field kiểu:
+
+```text
+storageProvider
+remoteObjectKey
+remoteUrl
+expiresAt
+```
+
+để sau này không phải sửa DB/UI.
+
+---
+
+# PHASE 8 — KOL Library
+
+Đây trở thành feature chính thức của New System.
+
+Menu:
+
+```text
+Create
+Queue
+History
+KOL Library
+Settings
+```
+
+## KOL Library UI
+
+Ví dụ:
+
+```text
+KOL LIBRARY
+
+[ Search KOL... ]            [+ Add KOL]
+
+┌────────────┐
+│ thumbnail  │
+│ Maya       │
+│ UGC Woman  │
+│ Used 84x   │
+│            │
+│ [Select]   │
+│ [Edit]     │
+└────────────┘
+```
+
+---
+
+# PHASE 9 — KOL data model
+
+Không dùng asset ID làm tên hiển thị.
+
+Ví dụ:
+
+```javascript
+{
+    id: "kol_001",
+
+    displayName: "Maya",
+
+    description: "Female UGC Creator",
+
+    thumbnailPath: "...",
+
+    tags: [
+        "female",
+        "ugc",
+        "lifestyle"
+    ],
+
+    assetProvider: "mock",
+
+    assetId: "mock_asset_123",
+
+    usageCount: 84,
+
+    createdAt,
+    updatedAt,
+    lastUsedAt
+}
+```
+
+User đổi:
+
+```text
+Maya
+```
+
+thành:
+
+```text
+Maya Casual UGC
+```
+
+chỉ đổi:
+
+```text
+displayName
+```
+
+không upload lại asset.
+
+DB riêng:
+
+```text
+byteplus_kol_library.json
+```
+
+---
+
+# PHASE 10 — Add KOL
+
+User có thể vào:
+
+```text
+KOL Library
+→ Add KOL
+```
+
+Form:
+
+```text
+KOL Name
+Description
+Tags
+
+Upload Image / Video Assets
+
+[ Save KOL ]
+```
+
+Hiện tại:
+
+```text
+Mock LAS Asset
+→ asset://mock-xxxx
+```
+
+Sau này:
+
+```text
+LAS Asset Library
+→ asset://REAL_ASSET_ID
+```
+
+Provider abstraction:
+
+```text
+MockAssetProvider
+LasAssetProvider
+```
+
+---
+
+# PHASE 11 — Chọn KOL khi tạo video
+
+Create Video có:
+
+```text
+REFERENCES
+
+[ + Upload Image ]
+[ + Upload Video ]
+
+[ Choose KOL ]
+```
+
+Bấm:
+
+```text
+Choose KOL
+```
+
+mở modal/library.
+
+Select:
+
+```text
+Maya
+```
+
+thì task xuất hiện:
+
+```text
+👤 Maya
+KOL Reference
+```
+
+Prompt có thể sử dụng reference tương ứng.
+
+---
+
+# PHASE 12 — Reference ordering
+
+Phải giữ điểm mạnh của hệ thống cũ.
+
+User có thể drag:
+
+```text
+Image 1
+Video 1
+Image 2
+KOL Maya
+```
+
+Reference labels phải cập nhật đúng.
+
+Ví dụ reorder:
+
+```text
+Image 2
+```
+
+lên đầu.
+
+UI cập nhật:
+
+```text
+@Image 1
+@Image 2
+```
+
+Prompt writer sẽ rất dễ sử dụng.
+
+---
+
+# PHASE 13 — GTF Video AI Studio UI
+
+Không copy old CSS.
+
+Design direction:
+
+> Modern AI creative workspace / production studio.
+
+Không:
+
+> developer control panel.
+
+## Desktop layout
+
+```text
+┌─────────────────────────────────────────────────────┐
+│ GTF Video AI Studio                Queue 7/10 ●    │
+├───────────────┬─────────────────────┬───────────────┤
+│ Navigation    │ Create Video        │ Live Queue    │
+│               │                     │               │
+│ Create        │ Creator             │ Running 7/10  │
+│ Queue         │ Task Name           │ Waiting 18    │
+│ History       │                     │               │
+│ KOL Library   │ References          │ Task cards    │
+│ Settings      │                     │               │
+│               │ Prompt              │               │
+│               │                     │               │
+│               │ Generation Settings │               │
+│               │                     │               │
+│               │ Add to Queue        │               │
+└───────────────┴─────────────────────┴───────────────┘
+```
+
+---
+
+# PHASE 14 — UX tạo video
+
+User flow phải rất ngắn:
+
+```text
+1. Creator
+2. Task Name
+3. References
+4. Prompt
+5. Settings
+6. Add to Queue
+```
+
+Không bắt user hiểu:
+
+* LAS;
+* TOS;
+* asset ID;
+* API endpoint;
+* API task ID.
+
+Đó là backend concern.
+
+---
+
+# PHASE 15 — Generation settings
+
+Main settings:
+
+```text
+Duration
+Aspect Ratio
+Resolution
+```
+
+Mock/test default:
+
+```text
+Duration: 4s
+Resolution: 480p
+```
+
+Advanced:
+
+```text
+▸ Advanced Settings
+```
+
+để dành các option provider-specific sau này.
+
+---
+
+# PHASE 16 — Mock Provider hoàn chỉnh
+
+Chưa có BytePlus key nên đây là engine thực thi hiện tại.
+
+Không fake rằng API thật hoạt động.
+
+Header phải hiện:
+
+```text
+🧪 MOCK MODE
+BytePlus API is not configured
+```
+
+Mock workflow:
+
+```text
+Preparing References
+        ↓
+Uploading References
+        ↓
+Submitting to Seedance
+        ↓
+Queued
+        ↓
+Generating
+        ↓
+Downloading
+        ↓
+Completed
+```
+
+Có progress giả lập hợp lý.
+
+Ví dụ:
+
+```text
+5%
+20%
+35%
+55%
+80%
+95%
+100%
+```
+
+---
+
+# PHASE 17 — Mock failure
+
+Mock không chỉ success.
+
+Phải support:
+
+```text
+Mock Success
+Mock Provider Failure
+Mock Upload Failure
+Mock Generation Failure
+```
+
+Có thể thông qua development flag.
+
+Mục đích:
+
+test:
+
+```text
+Retry
+Failed state
+Error UI
+Slot release
+```
+
+---
+
+# PHASE 18 — Queue UI
+
+Dashboard phải cho thấy rõ:
+
+```text
+ACTIVE       7 / 10
+
+WAITING      23
+
+COMPLETED    142
+
+FAILED       3
+```
+
+Task card:
+
+```text
+S1.0906
+
+Vy Anh
+
+Generating
+████████░░ 78%
+
+@Image 1
+@Video 1
+Maya
+
+[Details]
+```
+
+---
+
+# PHASE 19 — Queue controls
+
+Giữ capability tốt của old system:
+
+```text
+Pause New Tasks
+Resume Queue
+Stop Queue
+
+Move Top
+Move Up
+Move Down
+Drag reorder
+
+Delete
+Retry
+```
+
+Nhưng semantics mới phải rõ.
+
+### Pause
+
+Không kill 10 request đang chạy.
+
+Chỉ:
+
+```text
+không dispatch thêm task mới
+```
+
+### Resume
+
+Lấp lại slot trống.
+
+---
+
+# PHASE 20 — Bulk Import
+
+Giữ khả năng bulk vì team đã quen dùng.
+
+Bulk task vẫn hỗ trợ:
+
+```text
+Creator
+Task Name
+Prompt
+References
+```
+
+Nếu format cũ phù hợp thì reuse parser logic có chọn lọc.
+
+Nhưng:
+
+**không được phụ thuộc old queue implementation.**
+
+Có thể copy idea/code utility nếu an toàn.
+
+---
+
+# PHASE 21 — Realtime multi-user
+
+Vì nhiều nhân viên cùng sử dụng.
+
+Socket namespace/event mới:
+
+```text
+byteplus:queue-updated
+byteplus:task-updated
+byteplus:stats-updated
+byteplus:kol-updated
+```
+
+Không dùng event cũ nếu dễ conflict.
+
+Scenario:
+
+```text
+User A add Task
+        ↓
+User B thấy ngay
+
+User B reorder
+        ↓
+User A thấy ngay
+```
+
+---
+
+# PHASE 22 — Persistence
+
+Restart server:
+
+```text
+pending
+→ vẫn pending
+
+completed
+→ vẫn completed
+
+failed
+→ vẫn failed
+```
+
+Task đang active cần đặc biệt xử lý.
+
+---
+
+# PHASE 23 — Recovery architecture cho paid API
+
+Hiện tại Mock nhưng phải chuẩn bị đúng architecture.
+
+Nếu task:
+
+```text
+providerTaskId == null
+```
+
+server restart:
+
+```text
+→ pending
+→ submit lại sau
+```
+
+Nếu:
+
+```text
+providerTaskId != null
+```
+
+thì:
+
+```text
+KHÔNG submit lần hai
+```
+
+mà:
+
+```text
+resumeProviderTask(providerTaskId)
+```
+
+Mock cũng phải test logic này.
+
+Sau này tránh:
+
+```text
+1 task
+→ submit BytePlus
+→ server crash
+→ submit BytePlus lần nữa
+→ mất tiền 2 video
+```
+
+---
+
+# PHASE 24 — Atomic persistence
+
+Không chỉ:
+
+```text
+fs.writeFile(queue_db.json)
+```
+
+Nên:
+
+```text
+write temp
+→ fsync nếu cần
+→ rename
+```
+
+để hạn chế JSON hỏng nếu server chết lúc đang ghi.
+
+New DB thôi.
+
+Không thay old DB persistence.
+
+---
+
+# PHASE 25 — History
+
+Có màn:
+
+```text
+History
+```
+
+Filters:
+
+```text
+All
+Completed
+Failed
+Creator
+Date
+```
+
+Thông tin:
+
+```text
+Creator
+Task
+References
+Prompt
+Started
+Completed
+Duration
+Provider
+Output
+Error
+Retry
+```
+
+---
+
+# PHASE 26 — Output management
+
+Mock mode có thể dùng sample/mock output.
+
+Sau này real mode:
+
+```text
+BytePlus result
+ ↓
+download
+ ↓
+local storage
+```
+
+Giữ convention hợp lý kiểu hệ thống cũ:
+
+```text
+outputs/
+  creator/
+    taskName/
+      video.mp4
+```
+
+Nhưng New System dùng folder namespace riêng để không conflict old system.
+
+Ví dụ:
+
+```text
+byteplus_outputs/
+```
+
+---
+
+# PHASE 27 — Provider architecture
+
+Core interface phải đại khái như:
+
+```text
+createGeneration()
+getGenerationStatus()
+getResult()
+cancelGeneration()
+```
+
+Implementations:
+
+```text
+MockGenerationProvider
+BytePlusGenerationProvider
+```
+
+Hiện tại:
+
+```text
+MockGenerationProvider
+```
+
+được enable.
+
+BytePlus provider có thể scaffold nhưng không pretend hoạt động.
+
+---
+
+# PHASE 28 — Storage architecture
+
+Tương tự:
+
+```text
+ReferenceStorageProvider
+│
+├── MockStorageProvider
+└── TosStorageProvider
+```
+
+KOL:
+
+```text
+AssetLibraryProvider
+│
+├── MockAssetLibraryProvider
+└── LasAssetLibraryProvider
+```
+
+Tất cả các real implementation có thể để:
+
+```text
+NOT_CONFIGURED
+```
+
+cho tới khi credential có thật.
+
+---
+
+# PHASE 29 — Configuration
+
+Tạo:
+
+```text
+.env.example
+```
+
+Ví dụ:
+
+```env
+BYTEPLUS_MODE=mock
+
+BYTEPLUS_MAX_CONCURRENCY=10
+
+BYTEPLUS_API_KEY=
+
+BYTEPLUS_TOS_ACCESS_KEY=
+BYTEPLUS_TOS_SECRET_KEY=
+BYTEPLUS_TOS_BUCKET=
+BYTEPLUS_TOS_REGION=
+
+BYTEPLUS_LAS_ASSET_ENABLED=false
+```
+
+Không commit credential.
+
+---
+
+# PHASE 30 — Settings page
+
+System mới có:
+
+```text
+Settings
+```
+
+Hiện tại:
+
+```text
+Mode
+MOCK
+
+Max concurrency
+10
+
+Seedance
+Not configured
+
+TOS
+Not configured
+
+KOL Asset Library
+Mock
+```
+
+Sau này admin nhìn là biết thiếu gì.
+
+---
+
+# PHASE 31 — Preflight
+
+Trước dispatch task:
+
+```text
+validateTask()
+```
+
+Check:
+
+```text
+prompt?
+reference valid?
+file still exists?
+duration?
+resolution?
+provider configured?
+asset valid?
+```
+
+Nếu sai:
+
+```text
+fail BEFORE provider submission
+```
+
+không tiêu slot API vô ích.
+
+---
+
+# PHASE 32 — Test Matrix trong Mock Mode
+
+Phải automated/manual test ít nhất:
+
+### Input
+
+```text
+Prompt only
+
+Image + Prompt
+
+Video + Prompt
+
+Image + Video + Prompt
+
+KOL + Prompt
+
+KOL + Image + Video + Prompt
+
+Multiple Images
+
+Multiple Videos
+```
+
+### Queue
+
+```text
+1 task
+
+10 tasks
+
+11 tasks
+
+30 tasks
+
+50 tasks
+```
+
+Đặc biệt:
+
+```text
+10 active
+11th waiting
+```
+
+Task active xong:
+
+```text
+11th automatically runs
+```
+
+---
+
+# PHASE 33 — Reliability tests
+
+Phải test:
+
+```text
+Pause while 10 active
+
+Resume
+
+Stop
+
+Retry
+
+Delete pending
+
+Delete completed
+
+Move top
+
+Drag reorder
+
+Restart server
+
+Restart with pending tasks
+
+Restart with mock providerTaskId
+
+Multiple browser sessions
+```
+
+---
+
+# PHASE 34 — KOL Library tests
+
+Test:
+
+```text
+Add KOL
+
+Rename KOL
+
+Edit tags
+
+Search
+
+Select into task
+
+Use same KOL repeatedly
+
+usageCount++
+
+Delete KOL
+```
+
+Nếu KOL đang được historical task tham chiếu:
+
+> không làm history vỡ.
+
+---
+
+# PHASE 35 — UX QA
+
+Hệ thống mới phải đạt:
+
+### User không cần biết
+
+```text
+API
+TOS
+LAS
+asset://
+providerTaskId
+```
+
+để tạo video.
+
+Họ chỉ cần:
+
+```text
+Creator
+Task
+Reference
+Prompt
+Add Queue
+```
+
+Đó mới là UX đúng.
+
+---
+
+# PHASE 36 — Regression hệ thống cũ
+
+Sau tất cả thay đổi:
+
+```text
+/higgsfield
+```
+
+phải kiểm tra lại:
+
+* Add task;
+* upload;
+* queue;
+* CDP;
+* CLI;
+* Start/Pause/Stop;
+* history;
+* download;
+* socket;
+* persistence.
+
+Không được có regression do V2.
+
+---
+
+# Definition of Done — GIAI ĐOẠN HIỆN TẠI
+
+Chưa cần BytePlus thật.
+
+Task được coi là hoàn thành Phase Mock khi:
+
+```text
+✓ Gateway mới
+
+✓ Old Higgsfield untouched
+
+✓ New UI hoàn toàn khác
+
+✓ New backend độc lập
+
+✓ New DB độc lập
+
+✓ New Socket events
+
+✓ New queue độc lập
+
+✓ Rolling concurrency 10
+
+✓ Prompt support
+
+✓ Image reference
+
+✓ Video reference
+
+✓ Multiple references
+
+✓ Reference reorder
+
+✓ KOL Library
+
+✓ Add KOL
+
+✓ Rename KOL
+
+✓ Reuse KOL
+
+✓ Search KOL
+
+✓ Mock LAS Asset
+
+✓ Mock TOS Storage
+
+✓ Mock Seedance Provider
+
+✓ Start/Pause/Resume/Stop
+
+✓ Retry
+
+✓ Priority/reorder
+
+✓ Bulk queue
+
+✓ History
+
+✓ Realtime multi-user
+
+✓ Restart persistence
+
+✓ Resume provider task architecture
+
+✓ Independent output storage
+
+✓ Settings
+
+✓ .env architecture
+
+✓ No credential hard-coded
+
+✓ Automated/manual test report
+
+✓ Old system regression PASS
+```
+
+---
+
+# Phase sau — khi có BytePlus credential
+
+Lúc đó **không thiết kế lại hệ thống nữa**.
+
+Chỉ implement/activate 3 adapter:
+
+```text
+1. BytePlusGenerationProvider
+
+2. TosStorageProvider
+
+3. LasAssetLibraryProvider
+```
+
+Sau đó E2E thật:
+
+```text
+User
+ ↓
+Image
++
+Video
++
+Prompt / KOL
+ ↓
+GTF Queue
+ ↓
+Slot 1/10
+ ↓
+Reference preparation
+ ↓
+BytePlus Seedance 2.5
+ ↓
+4 second generation
+ ↓
+Poll
+ ↓
+Completed
+ ↓
+Download
+ ↓
+History
+```
+
+---
+
+# Cấu trúc cuối mình muốn
+
+```text
+GTF VIDEO AI AUTOMATION
+│
+├── Gateway
+│
+├── Higgsfield Classic
+│      └── KEEP AS-IS
+│
+└── GTF Video AI Studio
+       │
+       ├── Create Video
+       ├── Queue
+       ├── History
+       ├── KOL Library
+       └── Settings
+              │
+              ▼
+       BytePlus Queue Engine
+              │
+       concurrency = 10
+              │
+       Reference Manager
+       ├── Images
+       ├── Videos
+       └── KOL Assets
+              │
+       Provider Abstraction
+       ├── Mock NOW
+       └── BytePlus LATER
+              │
+       Storage
+       ├── Mock TOS
+       └── TOS LATER
+              │
+       Asset Library
+       ├── Mock LAS
+       └── LAS LATER
+```
+
+**Đây là plan mình chốt.**
+
+Bước tiếp theo mình khuyên không phải code ngay từng phần thủ công, mà là mình viết cho bạn **MASTER IMPLEMENTATION PROMPT dành cho Claude Agent**, trong đó đóng đinh: scope, kiến trúc trên, file nào cấm sửa, thứ tự thực hiện phase, acceptance test, nguyên tắc UI và yêu cầu Agent phải tự audit code trước mỗi thay đổi. Như vậy mới giảm mạnh nguy cơ Agent “tiện tay refactor luôn hệ thống cũ”.

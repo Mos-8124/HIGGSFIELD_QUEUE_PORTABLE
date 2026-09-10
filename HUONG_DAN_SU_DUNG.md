@@ -4,8 +4,8 @@
 ---
 
 ### 📌 THÔNG TIN TRUY CẬP
-* **Địa chỉ chạy trực tiếp trên máy chủ:** [http://localhost:3100](http://localhost:3100)
-* **Địa chỉ dành cho các máy cùng mạng LAN:** Nhìn góc trên bên phải thanh tiêu đề (VD: `http://192.168.68.18:3100`)
+* **Địa chỉ chạy trực tiếp trên máy chủ:** [http://localhost:20140](http://localhost:20140)
+* **Địa chỉ dành cho các máy cùng mạng LAN:** Nhìn góc trên bên phải thanh tiêu đề (VD: `http://192.168.68.18:20140`)
 * **Cổng gỡ lỗi Chrome CDP:** `http://127.0.0.1:9333`
 
 ---
@@ -33,11 +33,11 @@
 3. Màn hình console sẽ hiển thị thông báo kết nối thành công tới Chrome CDP:
    ```text
    🚀 Higgsfield AI Queue Dashboard running on:
-      🏠 Local: http://localhost:3100
-      🌐 LAN:   http://192.168.68.18:3100
+      🏠 Local: http://localhost:20140
+      🌐 LAN:   http://192.168.68.18:20140
    📡 Connected to Chrome CDP at http://127.0.0.1:9333
    ```
-4. Mở trình duyệt bất kỳ và truy cập vào địa chỉ: **[http://localhost:3100](http://localhost:3100)**
+4. Mở trình duyệt bất kỳ và truy cập vào địa chỉ: **[http://localhost:20140](http://localhost:20140)**
 
 ---
 
@@ -133,7 +133,7 @@
 Hệ thống đã được thiết kế sẵn để làm việc nhóm (Teamwork):
 1. **Lấy Đường Link LAN:**
    * Nhìn lên góc trên thanh tiêu đề của trang Dashboard, bạn sẽ thấy huy hiệu:
-     `🌐 LAN: 192.168.68.18:3100 (Click Copy)`
+     `🌐 LAN: 192.168.68.18:20140 (Click Copy)`
    * Nhấp chuột trực tiếp vào huy hiệu này để copy đường link vào bộ nhớ tạm.
 2. **Gửi Cho Đồng Đội:**
    * Gửi link trên cho các máy tính khác, máy tính bảng hoặc điện thoại kết nối cùng mạng Wi-Fi công ty / phòng làm việc.

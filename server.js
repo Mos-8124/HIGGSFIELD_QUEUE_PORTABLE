@@ -14,13 +14,17 @@ import { promisify } from 'util';
 import puppeteer from 'puppeteer-core';
 import { video_generate, resolveToHostPath, sanitizePrompt } from './video_generate.js';
 import { runCliTask, estimateCost, getAccountCredits, CLI_VIDEO_MODELS } from './cli_generate.js';
+// GTF Video AI Automation V2 — hệ thống thứ hai, độc lập hoàn toàn với luồng Higgsfield ở trên.
+import { createByteplusSubsystem, attachByteplusSockets } from './byteplus/index.js';
 
 const execAsync = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = process.env.PORT || 3100;
+// Cong runtime cua du an. Dung bien rieng HQ_PORT thay vi PORT chung, vi ten
+// PORT hay bi tool khac tren cung may chiem, khien dashboard bind nham cong.
+const PORT = parseInt(process.env.HQ_PORT || '20140', 10);
 const CDP_HOST = process.env.CDP_HOST || '127.0.0.1';
 const CDP_PORT = parseInt(process.env.CDP_PORT || '9333', 10);
 const DB_PATH = path.join(__dirname, 'queue_db.json');
@@ -191,8 +195,33 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// =========================================================================
+// GTF VIDEO AI AUTOMATION V2 — LẮP HỆ THỐNG THỨ HAI
+// Mọi thứ dưới đây nằm trong namespace riêng: /api/byteplus, /byteplus,
+// Socket.IO namespace '/byteplus', và các file DB riêng. Hệ Higgsfield cũ
+// bên dưới không hề biết đến sự tồn tại của nó.
+// =========================================================================
+const byteplus = createByteplusSubsystem({
+    log: (level, msg) => broadcastLog(level, `[GTF V2] ${msg}`, 'byteplus')
+});
+app.use('/api/byteplus', byteplus.router);
+attachByteplusSockets(io, byteplus);
+// Nối lại các job đã gửi lên provider trước khi server chết (KHÔNG gửi lại),
+// rồi nạp tiếp các task còn chờ.
+byteplus.queue.resumeRecovered();
+byteplus.queue.dispatch();
+
+// Cổng vào: / là trang chọn hệ thống, /higgsfield giữ nguyên UI cũ.
+// Đăng ký TRƯỚC express.static để static không tự phục vụ index.html tại '/'.
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gateway.html')));
+app.get('/higgsfield', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get(['/deeplove', '/Deeplove', '/byteplus'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
+app.get('/studio', (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
+
 // Phục vụ static files từ public, uploads và downloads
-app.use(express.static(path.join(__dirname, 'public')));
+// index:false — nếu không, express.static sẽ chiếm mất '/' bằng public/index.html.
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+app.use('/studio', express.static(path.join(__dirname, 'public', 'studio')));
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/downloads', express.static(DOWNLOAD_DIR));
 app.use('/saved-videos', express.static(VIDEO_SAVE_DIR, {

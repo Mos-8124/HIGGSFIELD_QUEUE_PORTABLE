@@ -45,7 +45,7 @@ Trước khi bắt đầu, đảm bảo máy tính mới đã cài đặt:
 - Nhấp đúp chuột vào file:
   👉 **`3_CHAY_DASHBOARD.bat`**
 - Trình duyệt sẽ tự động mở giao diện quản lý tại:
-  🔗 **`http://localhost:3100`**
+  🔗 **`http://localhost:20140`**
 - *(Hoặc từ các lần sau, bạn chỉ cần nhấp đúp vào **`CHAY_TAT_CA_1_CLICK.bat`** là hệ thống sẽ tự động bật toàn bộ từ Chrome đến Dashboard).*
 
 ---
@@ -62,7 +62,7 @@ Trước khi bắt đầu, đảm bảo máy tính mới đã cài đặt:
 | **Tự Động Chờ Khi Trùng Luồng** | Khi gặp giới hạn `concurrent_jobs_limit: 1`, hệ thống tự động chờ 20s và thử lại thông minh (tối đa 8 lần). |
 | **Thu Thập Link Video Tự Động** | Tự động bóc tách link MP4 CloudFront từ thumbnail Cloudflare CDN; Tăng thời gian chờ lên 25 phút. |
 | **Nút `[🔄 Đồng Bộ Link]`** | Quét ngầm mỗi 15s và có nút bấm thủ công để tự động lấy link cho các task đã xong. |
-| **Chia Sẻ Mạng LAN** | Cung cấp đường dẫn mạng LAN (`http://<IP_LAN>:3100`) để các máy tính khác trong cùng phòng/công ty cùng tạo task. |
+| **Chia Sẻ Mạng LAN** | Cung cấp đường dẫn mạng LAN (`http://<IP_LAN>:20140`) để các máy tính khác trong cùng phòng/công ty cùng tạo task. |
 
 ---
 
@@ -72,7 +72,7 @@ Trước khi bắt đầu, đảm bảo máy tính mới đã cài đặt:
 - **Cách xử lý:** Chạy file `2_MO_CHROME_HIGGSFIELD.bat` để mở lại Chrome CDP trên cổng 9333.
 
 #### 2. Muốn chạy hệ thống trên một máy tính khác trong mạng nội bộ (LAN)?
-- Trên máy chạy server, nhìn vào góc trên bên phải của Dashboard sẽ thấy ô màu xanh `🌐 LAN: http://192.168.x.x:3100`.
+- Trên máy chạy server, nhìn vào góc trên bên phải của Dashboard sẽ thấy ô màu xanh `🌐 LAN: http://192.168.x.x:20140`.
 - Nhấp vào ô đó để copy đường link và gửi cho đồng nghiệp trong cùng mạng Wi-Fi/LAN để họ mở trên máy của họ và gửi prompt/ảnh vào hàng chờ.
 
 #### 3. Video đã render xong trên web Higgsfield nhưng trên Dashboard chưa hiện link?

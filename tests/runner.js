@@ -3,6 +3,11 @@ import { performance } from 'perf_hooks';
 import { runDockerConfigTests } from './docker_config.test.js';
 import { runPipelineTests } from './unit_pipeline.test.js';
 import { runApiServerTests } from './api_server.test.js';
+import { runByteplusTests } from './byteplus.test.js';
+import { runOpenRouterTests } from './openrouter.test.js';
+import { runKieTests } from './kie.test.js';
+import { runKiePricingTests } from './kie_pricing.test.js';
+import { runUsageManagerTests } from './usage_manager.test.js';
 
 // ANSI styling colors
 const colors = {
@@ -124,6 +129,11 @@ export async function runAllTests() {
         await runDockerConfigTests(reporter);
         await runPipelineTests(reporter);
         await runApiServerTests(reporter);
+        await runByteplusTests(reporter);
+        await runOpenRouterTests(reporter);
+        await runKieTests(reporter);
+        await runKiePricingTests(reporter);
+        await runUsageManagerTests(reporter);
 
         const totalDuration = performance.now() - startTime;
         const exitCode = reporter.summary(totalDuration);

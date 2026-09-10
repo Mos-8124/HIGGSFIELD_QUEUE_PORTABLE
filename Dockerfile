@@ -20,17 +20,17 @@ RUN mkdir -p /app/uploads
 COPY . .
 
 # Expose Web Dashboard port
-EXPOSE 3000
+EXPOSE 20140
 
 # Set production environment defaults
-ENV PORT=3000
+ENV HQ_PORT=20140
 ENV NODE_ENV=production
 ENV CDP_HOST=host.docker.internal
 ENV CDP_PORT=9333
 
 # Container Health Check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
+  CMD curl -f http://localhost:20140/ || exit 1
 
 # Start the application server
 CMD ["node", "server.js"]

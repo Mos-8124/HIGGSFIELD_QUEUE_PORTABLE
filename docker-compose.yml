@@ -8,9 +8,9 @@ services:
     container_name: higgfield-queue-dashboard
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "20140:20140"
     environment:
-      - PORT=3000
+      - HQ_PORT=20140
       - CDP_HOST=host.docker.internal
       - CDP_PORT=9333
       - NODE_ENV=production
