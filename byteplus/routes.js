@@ -152,7 +152,8 @@ export function createByteplusRouter({ queue, kols }) {
             isPaused: snap.control.paused,
             currentTaskId: runningTask ? runningTask.id : null,
             currentTask: runningTask,
-            queue: enrichedTasks
+            queue: enrichedTasks,
+            tasks: enrichedTasks
         });
     });
 
@@ -339,10 +340,21 @@ export function createByteplusRouter({ queue, kols }) {
     router.post('/tasks/:id/move-top',  (req, res) => res.json({ success: queue.moveTop(req.params.id) }));
     router.post('/tasks/:id/move-up',   (req, res) => res.json({ success: queue.moveUp(req.params.id) }));
     router.post('/tasks/:id/move-down', (req, res) => res.json({ success: queue.moveDown(req.params.id) }));
+    router.post('/tasks/:id/complete',  (req, res) => {
+        const t = queue.find(req.params.id);
+        if (!t) return res.status(404).json({ error: 'Khong tim thay task' });
+        t.status = 'completed';
+        t.progress = 100;
+        t.completedAt = new Date().toISOString();
+        queue.store.save();
+        queue.emit('task-updated', t);
+        queue.emit('queue-updated');
+        res.json({ success: true, task: t });
+    });
 
     router.post('/queue/reorder', (req, res) => {
-        const ids = (req.body && req.body.orderedIds) || [];
-        if (!Array.isArray(ids)) return res.status(400).json({ error: 'orderedIds phai la mang.' });
+        const ids = (req.body && (req.body.orderedIds || req.body.taskIds)) || [];
+        if (!Array.isArray(ids)) return res.status(400).json({ error: 'orderedIds hoặc taskIds phải là mảng.' });
         queue.reorder(ids);
         res.json({ success: true });
     });
@@ -359,10 +371,18 @@ export function createByteplusRouter({ queue, kols }) {
         else if (action === 'pause') queue.pause();
         else if (action === 'resume') queue.resume();
         else if (action === 'stop') queue.stop();
+        else if (action === 'clearCompleted' || action === 'clear' || action === 'clear_completed') {
+            const removed = queue.clearCompleted();
+            return res.json({ success: true, removed });
+        }
         res.json({ success: true });
     });
 
     router.delete('/queue/completed', (req, res) => {
+        res.json({ success: true, removed: queue.clearCompleted() });
+    });
+
+    router.post('/queue/clear-completed', (req, res) => {
         res.json({ success: true, removed: queue.clearCompleted() });
     });
 

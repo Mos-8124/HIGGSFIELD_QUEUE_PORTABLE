@@ -1449,11 +1449,13 @@ tr.draggable-row.dragging {
 }
 tr.draggable-row.drag-over-top td {
     border-top: 3px solid #6366f1 !important;
-    background-color: rgba(99, 102, 241, 0.08) !important;
+    box-shadow: inset 0 3px 0 0 #6366f1;
+    background-color: rgba(99, 102, 241, 0.12) !important;
 }
 tr.draggable-row.drag-over-bottom td {
     border-bottom: 3px solid #6366f1 !important;
-    background-color: rgba(99, 102, 241, 0.08) !important;
+    box-shadow: inset 0 -3px 0 0 #6366f1;
+    background-color: rgba(99, 102, 241, 0.12) !important;
 }
 
 .prompt-cell {

@@ -1022,6 +1022,11 @@ function initTableDragAndDrop() {
 
     tbody.querySelectorAll('tr.draggable-row').forEach(row => {
         row.addEventListener('dragstart', (e) => {
+            // Không kích hoạt kéo khi người dùng click vào nút, link, input hoặc preview media
+            if (e.target.closest('button, a, input, select, textarea, .ref-media-item')) {
+                e.preventDefault();
+                return;
+            }
             draggedRow = row;
             draggedTaskId = row.dataset.taskId;
             e.dataTransfer.effectAllowed = 'move';
@@ -1060,7 +1065,8 @@ function initTableDragAndDrop() {
             }
         });
 
-        row.addEventListener('dragleave', () => {
+        row.addEventListener('dragleave', (e) => {
+            if (row.contains(e.relatedTarget)) return;
             row.classList.remove('drag-over-top', 'drag-over-bottom');
         });
 
@@ -1086,18 +1092,28 @@ function initTableDragAndDrop() {
             if (!insertBefore) newPos += 1;
             pendingTasks.splice(newPos, 0, movedItem);
 
-            // Ghép lại toàn bộ task IDs (giữ nguyên vị trí non-pending tasks)
-            const nonPendingTasks = appState.tasks.filter(t => t.status !== 'pending');
-            const allReorderedIds = [...nonPendingTasks.map(t => t.id), ...pendingTasks.map(t => t.id)];
+            // Cập nhật appState.tasks tại chỗ (Optimistic UI)
+            let pIdx = 0;
+            appState.tasks = appState.tasks.map(t => t.status === 'pending' ? pendingTasks[pIdx++] : t);
+            renderQueueTable();
 
+            const taskTitle = movedItem.taskName || movedItem.prompt || movedItem.id;
+            appendLog({
+                level: 'info',
+                message: `🔀 Đã đổi thứ tự ưu tiên task "${taskTitle.length > 35 ? taskTitle.slice(0, 35) + '...' : taskTitle}".`
+            });
+
+            // Gửi thứ tự mới lên backend
+            const allReorderedIds = appState.tasks.map(t => t.id);
             try {
                 await fetch('/api/byteplus/queue/reorder', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ taskIds: allReorderedIds })
+                    body: JSON.stringify({ orderedIds: allReorderedIds, taskIds: allReorderedIds })
                 });
             } catch (err) {
                 console.error('Lỗi lưu thứ tự kéo thả:', err);
+                appendLog({ level: 'error', message: '❌ Lỗi khi lưu thứ tự ưu tiên task lên server.' });
             }
         });
     });
@@ -1825,7 +1841,39 @@ if (el.btnPause) el.btnPause.addEventListener('click', () => {
 });
 
 if (el.btnStop) el.btnStop.addEventListener('click', () => sendControl('stop'));
-if (el.btnClear) el.btnClear.addEventListener('click', () => sendControl('clearCompleted'));
+
+if (el.btnClear) {
+    el.btnClear.addEventListener('click', async () => {
+        const completedTasks = appState.tasks.filter(t => t.status === 'completed');
+        if (completedTasks.length === 0) {
+            appendLog({ level: 'info', message: 'ℹ️ Không có task đã hoàn thành nào trong hàng chờ để dọn dẹp.' });
+            return;
+        }
+
+        const count = completedTasks.length;
+        // Optimistic UI: Dọn sạch ngay trên giao diện người dùng
+        appState.tasks = appState.tasks.filter(t => t.status !== 'completed');
+        appState.stats = calculateStats(appState.tasks);
+        updateUI();
+
+        appendLog({ level: 'info', message: `🧹 Đang dọn dẹp ${count} task đã hoàn thành khỏi hàng chờ...` });
+
+        try {
+            const res = await fetch('/api/byteplus/queue/clear-completed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if (data && data.success) {
+                const actualRemoved = typeof data.removed === 'number' ? data.removed : count;
+                appendLog({ level: 'info', message: `🧹 Đã dọn dẹp sạch ${actualRemoved} task đã hoàn thành khỏi hàng chờ.` });
+            }
+        } catch (err) {
+            console.error('Lỗi dọn dẹp task completed:', err);
+            appendLog({ level: 'error', message: '❌ Lỗi kết nối khi dọn dẹp task đã hoàn thành.' });
+        }
+    });
+}
 
 async function sendControl(action) {
     try {
@@ -1843,6 +1891,10 @@ async function sendControl(action) {
 window.deleteTask = async (id) => {
     try {
         await fetch(`/api/byteplus/tasks/${id}`, { method: 'DELETE' });
+        // Optimistic UI
+        appState.tasks = appState.tasks.filter(t => t.id !== id);
+        appState.stats = calculateStats(appState.tasks);
+        updateUI();
     } catch (err) {
         console.error('Lỗi xóa task:', err);
     }
@@ -1858,6 +1910,20 @@ window.retryTask = async (id) => {
 
 // Đổi lượt tạo: Cho lên đầu danh sách chờ
 window.moveTaskTop = async (id) => {
+    const pendingTasks = appState.tasks.filter(t => t.status === 'pending');
+    const idx = pendingTasks.findIndex(t => t.id === id);
+    if (idx > 0) {
+        const [item] = pendingTasks.splice(idx, 1);
+        pendingTasks.unshift(item);
+        let pIdx = 0;
+        appState.tasks = appState.tasks.map(t => t.status === 'pending' ? pendingTasks[pIdx++] : t);
+        renderQueueTable();
+        const taskTitle = item.taskName || item.prompt || id;
+        appendLog({
+            level: 'info',
+            message: `⭐ Đã ưu tiên task "${taskTitle.length > 35 ? taskTitle.slice(0, 35) + '...' : taskTitle}" lên đầu hàng chờ.`
+        });
+    }
     try {
         await fetch(`/api/byteplus/tasks/${id}/move-top`, { method: 'POST' });
     } catch (err) {
@@ -1867,6 +1933,15 @@ window.moveTaskTop = async (id) => {
 
 // Đổi lượt tạo: Đẩy lên trước 1 bậc
 window.moveTaskUp = async (id) => {
+    const pendingTasks = appState.tasks.filter(t => t.status === 'pending');
+    const idx = pendingTasks.findIndex(t => t.id === id);
+    if (idx > 0) {
+        const [item] = pendingTasks.splice(idx, 1);
+        pendingTasks.splice(idx - 1, 0, item);
+        let pIdx = 0;
+        appState.tasks = appState.tasks.map(t => t.status === 'pending' ? pendingTasks[pIdx++] : t);
+        renderQueueTable();
+    }
     try {
         await fetch(`/api/byteplus/tasks/${id}/move-up`, { method: 'POST' });
     } catch (err) {
@@ -1876,6 +1951,15 @@ window.moveTaskUp = async (id) => {
 
 // Đổi lượt tạo: Đẩy lùi sau 1 bậc
 window.moveTaskDown = async (id) => {
+    const pendingTasks = appState.tasks.filter(t => t.status === 'pending');
+    const idx = pendingTasks.findIndex(t => t.id === id);
+    if (idx !== -1 && idx < pendingTasks.length - 1) {
+        const [item] = pendingTasks.splice(idx, 1);
+        pendingTasks.splice(idx + 1, 0, item);
+        let pIdx = 0;
+        appState.tasks = appState.tasks.map(t => t.status === 'pending' ? pendingTasks[pIdx++] : t);
+        renderQueueTable();
+    }
     try {
         await fetch(`/api/byteplus/tasks/${id}/move-down`, { method: 'POST' });
     } catch (err) {
