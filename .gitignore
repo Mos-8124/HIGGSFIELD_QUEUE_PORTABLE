@@ -28,3 +28,16 @@ Thumbs.db
 backups/
 .env
 .env.*
+!.env.example
+
+# GTF Video AI Automation V2 (he thong moi)
+byteplus_queue_db.json
+byteplus_kol_library.json
+byteplus_mock_jobs.json
+byteplus_usage.json
+*.backup.json
+byteplus_uploads/
+byteplus_outputs/
+*.corrupt-*
+server.js.pre-v2.bak
+*.err

@@ -51,8 +51,8 @@ export async function runDockerConfigTests(reporter) {
     await reporter.test(suiteName, 'Tier 1: Dockerfile EXPOSE and ENV definitions', () => {
         const dockerfile = readFileSafe('Dockerfile');
         assert.ok(dockerfile, 'Dockerfile must exist');
-        assert.match(dockerfile, /EXPOSE\s+3000/i, 'Dockerfile must EXPOSE port 3000');
-        assert.match(dockerfile, /ENV\s+.*PORT.*3000/i, 'Dockerfile should set ENV PORT=3000');
+        assert.match(dockerfile, /EXPOSE\s+20140/i, 'Dockerfile must EXPOSE port 20140');
+        assert.match(dockerfile, /ENV\s+.*PORT.*20140/i, 'Dockerfile should set ENV HQ_PORT=20140');
         assert.match(dockerfile, /ENV\s+.*CDP_HOST/i, 'Dockerfile should configure ENV CDP_HOST');
     });
 
@@ -70,10 +70,10 @@ export async function runDockerConfigTests(reporter) {
         assert.match(compose, /context:\s*\./i, 'Compose build context should be root (.)');
     });
 
-    await reporter.test(suiteName, 'Tier 1: docker-compose.yml port forwarding 3000:3000', () => {
+    await reporter.test(suiteName, 'Tier 1: docker-compose.yml port forwarding 20140:20140', () => {
         const compose = readFileSafe('docker-compose.yml');
         assert.ok(compose, 'docker-compose.yml must exist');
-        assert.match(compose, /ports:\s*\n\s+-\s+["']?3000:3000["']?/i, 'Compose must forward port 3000:3000');
+        assert.match(compose, /ports:\s*\n\s+-\s+["']?20140:20140["']?/i, 'Compose must forward port 20140:20140');
     });
 
     await reporter.test(suiteName, 'Tier 1: docker-compose.yml extra_hosts host-gateway bridging', () => {

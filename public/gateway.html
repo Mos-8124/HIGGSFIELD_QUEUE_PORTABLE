@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>GTF Video AI Automation</title>
+<style>
+:root{
+  --bg:#0d0f12; --surface-1:#111419; --surface-2:#15191f; --surface-3:#1a1f26;
+  --border:#262c35; --border-strong:#343b46;
+  --text:#f4f6f8; --text-secondary:#a1a9b5; --text-muted:#69727f;
+  --accent:#7567ef; --accent-hover:#8578f4; --accent-soft:rgba(117,103,239,.10);
+  --warning:#dfa640;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:13.5px;line-height:1.5;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;padding:48px 24px;
+  -webkit-font-smoothing:antialiased;
+}
+a{text-decoration:none;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.i{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;
+   stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;display:block}
+
+.shell{width:100%;max-width:940px}
+
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:34px}
+.brand .mark{
+  width:28px;height:28px;border-radius:8px;background:var(--accent);
+  display:grid;place-items:center;color:#fff;flex:0 0 auto;
+}
+.brand .mark .i{width:15px;height:15px;stroke-width:2.2}
+.brand b{font-size:14px;font-weight:650;letter-spacing:-.01em}
+.brand span{font-size:14px;color:var(--text-muted)}
+
+h1{font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1.16;margin-bottom:10px}
+.sub{color:var(--text-secondary);font-size:14.5px;max-width:56ch;margin-bottom:38px}
+
+.cards{display:grid;grid-template-columns:1.28fr 1fr;gap:18px;align-items:stretch}
+@media(max-width:800px){.cards{grid-template-columns:1fr}}
+
+.card{
+  position:relative;display:flex;flex-direction:column;
+  background:var(--surface-1);border:1px solid var(--border);
+  border-radius:16px;padding:26px;
+  transition:border-color .15s ease,transform .15s ease;
+}
+.card:hover{border-color:var(--border-strong);transform:translateY(-2px)}
+.card.primary{border-color:rgba(117,103,239,.42);background:var(--surface-2)}
+.card.primary:hover{border-color:var(--accent)}
+
+.badge{
+  position:absolute;top:-9px;left:24px;height:20px;padding:0 9px;
+  display:inline-flex;align-items:center;border-radius:999px;
+  background:var(--accent);color:#fff;font-size:10.5px;font-weight:650;letter-spacing:.05em;
+}
+.ico{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:var(--surface-3);border:1px solid var(--border);color:var(--text-secondary);
+  margin-bottom:16px;
+}
+.card.primary .ico{background:var(--accent-soft);border-color:rgba(117,103,239,.3);color:var(--accent)}
+.ico .i{width:19px;height:19px}
+
+h2{font-size:19px;font-weight:650;letter-spacing:-.02em;margin-bottom:4px}
+.tagline{font-size:12px;color:var(--text-muted);margin-bottom:16px}
+.card p{color:var(--text-secondary);font-size:13px;line-height:1.6;margin-bottom:18px}
+
+ul{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+li{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--text-secondary)}
+li .i{width:14px;height:14px;stroke-width:2.2;margin-top:2.5px;color:var(--text-muted)}
+.card.primary li .i{color:var(--accent)}
+
+.spacer{flex:1}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  height:44px;border-radius:10px;font-size:13.5px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface-3);color:var(--text);
+  transition:background .14s ease,border-color .14s ease,transform .1s ease;
+}
+.btn:hover{background:#20262e;border-color:var(--border-strong)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);transform:translateY(-1px)}
+
+footer{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;
+  margin-top:32px;padding-top:20px;border-top:1px solid var(--border);
+  font-size:12px;color:var(--text-muted);
+}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;
+  border-radius:999px;font-size:11px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--text-secondary);
+}
+.chip .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.chip.mock{color:var(--warning);border-color:rgba(223,166,64,.26);background:rgba(223,166,64,.10)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="ic-play"><path d="M6 4l12 8-12 8z" fill="currentColor" stroke="none"/></g>
+  <g id="ic-film"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M8 4.5v15M16 4.5v15M3 12h18"/></g>
+  <g id="ic-archive"><path d="M3.5 8.5h17v10a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><rect x="2.5" y="3.5" width="19" height="5" rx="1.5"/><path d="M10 13h4"/></g>
+  <g id="ic-check"><path d="M4 12.5l5 5L20 6.5"/></g>
+</defs></svg>
+
+<div class="shell">
+  <div class="brand">
+    <span class="mark"><svg class="i" viewBox="0 0 24 24"><use href="#ic-play"/></svg></span>
+    <b>GTF Video AI</b><span>Automation</span>
+  </div>
+
+  <h1>Xin chào!<br>Chào mừng bạn đến với GTF Video AI</h1>
+  <p class="sub">Chọn hệ thống bạn muốn dùng. Hệ thống mới nhanh hơn, chạy song song nhiều video cùng lúc và có thư viện KOL dùng lại được.</p>
+
+  <div class="cards">
+    <div class="card primary">
+      <span class="badge">KHUYẾN NGHỊ</span>
+      <div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#ic-film"/></svg></div>
+      <h2>GTF Video AI Studio</h2>
+      <div class="tagline">Hệ thống mới</div>
+      <p>Không cần mở Chrome, không cần đăng nhập thủ công. Gửi task rồi để hệ thống tự chạy.</p>
+      <ul>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Chạy song song tới 10 video cùng lúc</li>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Thư viện KOL — chọn lại nhân vật bằng một cú nhấp</li>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Ảnh, video và prompt làm tham chiếu</li>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Theo dõi tiến độ và lịch sử theo thời gian thực</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="btn btn-primary" href="/deeplove">Sử dụng hệ thống mới</a>
+    </div>
+
+    <div class="card">
+      <div class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#ic-archive"/></svg></div>
+      <h2>Higgsfield Classic</h2>
+      <div class="tagline">Hệ thống hiện tại</div>
+      <p>Luồng cũ vẫn giữ nguyên, không thay đổi gì.</p>
+      <ul>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Tự động hoá qua Chrome CDP</li>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Chế độ Unlimited theo gói</li>
+        <li><svg class="i" viewBox="0 0 24 24"><use href="#ic-check"/></svg> Toàn bộ task cũ vẫn còn</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="btn" href="/higgsfield">Mở hệ thống cũ</a>
+    </div>
+  </div>
+
+  <footer>
+    <span class="chip mock" id="mode-chip"><span class="dot"></span> Đang kiểm tra chế độ…</span>
+    <span>Cả hai hệ thống chạy chung một máy chủ, dữ liệu tách biệt hoàn toàn.</span>
+  </footer>
+</div>
+
+<script>
+fetch('/api/byteplus/status').then(function(r){return r.json();}).then(function(d){
+  var el = document.getElementById('mode-chip');
+  if (d.mode === 'mock') {
+    el.innerHTML = '<span class="dot"></span> MOCK — API chưa được cấu hình';
+  } else {
+    el.className = 'chip';
+    el.innerHTML = '<span class="dot"></span> LIVE — ' + (d.stats ? d.stats.active : 0) + ' / ' + (d.stats ? d.stats.maxConcurrency : '?') + ' đang chạy';
+  }
+}).catch(function(){
+  document.getElementById('mode-chip').textContent = 'Không kết nối được hệ thống mới';
+});
+</script>
+</body>
+</html>

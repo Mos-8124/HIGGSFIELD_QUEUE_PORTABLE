@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Higgsfield AI - Video Automation Queue Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>GTF Video AI Studio</title>
+    <link rel="stylesheet" href="/studio/studio.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,8 +20,8 @@
                     <span class="logo-text">AI STUDIO</span>
                 </div>
                 <div class="logo-titles">
-                    <h1>Higgsfield Video Automation Queue</h1>
-                    <p class="subtitle">Real-Time CDP 10-Step Automation Engine</p>
+                    <h1>GTF Video AI Studio</h1>
+                    <p class="subtitle">Real-Time Video AI Generation Studio</p>
                 </div>
             </div>
 
@@ -29,13 +29,7 @@
                 <!-- LAN IP Share Badge -->
                 <div class="status-pill lan-pill" id="lan-pill" style="cursor: pointer; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35);" title="Nhấp để sao chép đường dẫn chia sẻ trong mạng LAN">
                     <span class="status-dot green"></span>
-                    <span id="lan-text" style="color: #60a5fa; font-weight: 600;">🌐 LAN: 192.168.68.18:20140 (Click để Copy)</span>
-                </div>
-
-                <!-- Host CDP Status Badge -->
-                <div class="status-pill" id="cdp-status" title="Chrome DevTools Protocol Port 9333">
-                    <span class="status-dot yellow" id="cdp-dot"></span>
-                    <span id="cdp-text">CDP: Đang kiểm tra...</span>
+                    <span id="lan-text" style="color: #60a5fa; font-weight: 600;">🌐 LAN: 192.168.1.25:20140 (Click để Copy)</span>
                 </div>
 
                 <!-- Global Queue Status Badge -->
@@ -68,11 +62,11 @@
                 <span class="stat-label">Thất Bại</span>
                 <span class="stat-value text-rose" id="stat-failed">0</span>
             </div>
-            <div class="stat-card" id="stat-card-eta" title="Ước tính 30 phút / 1 video">
+            <div class="stat-card" id="stat-card-eta" title="Thời gian ước tính xử lý video">
                 <span class="stat-label">Thời Gian Chờ (ETA)</span>
                 <span class="stat-value text-purple" id="stat-eta">0 phút</span>
             </div>
-            <div class="stat-card stat-card-credits" id="stat-card-credits" title="Credit balance tài khoản Higgsfield">
+            <div class="stat-card stat-card-credits" id="stat-card-credits" title="Số dư Credits tài khoản">
                 <span class="stat-label">🪙 Credits</span>
                 <span class="stat-value text-amber" id="stat-credits">...</span>
             </div>
@@ -100,12 +94,6 @@
                             <button id="btn-stop" class="btn btn-danger" disabled title="Dừng hàng chờ và hủy task đang chạy">
                                 <span class="icon">⏹</span> Dừng
                             </button>
-                            <button id="btn-clear" class="btn btn-secondary" title="Dọn dẹp các task đã hoàn thành">
-                                <span class="icon">🧹</span> Dọn Đã Xong
-                            </button>
-                            <button id="btn-sync-videos" class="btn btn-secondary" title="Quét và cập nhật lại link cho các video đã hoàn thành trên Higgsfield">
-                                <span class="icon">🔄</span> Đồng Bộ Link
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -114,10 +102,13 @@
                 <div class="card form-card">
                     <div class="tabs-header">
                         <button class="tab-btn active" id="tab-btn-single" data-tab="single-form">
-                            <span class="tab-icon">✍️</span> Task Đơn Lẻ
+                            <span class="tab-icon">✨</span> Task Đơn Lẻ
                         </button>
                         <button class="tab-btn" id="tab-btn-bulk" data-tab="bulk-tab">
-                            <span class="tab-icon">📥</span> Import Hàng Loạt
+                            <span class="tab-icon">📋</span> Import Hàng Loạt
+                        </button>
+                        <button class="tab-btn" id="tab-btn-usage" data-tab="usage-tab">
+                            <span class="tab-icon">💰</span> Quản lý Tín dụng
                         </button>
                     </div>
 
@@ -177,6 +168,42 @@
                                 </div>
                             </div>
 
+                            <!-- Reference KOL Section (Nhân Vật Ảo) -->
+                            <div class="form-group" id="kol-select-group">
+                                <div class="form-label-row">
+                                    <label>👤 Nhân Vật KOL Ảo (Chọn từ Thư viện KOL)</label>
+                                    <button type="button" class="btn-xs" id="btn-add-new-kol" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 4px; padding: 2px 8px; cursor: pointer;">+ Tạo KOL Mới</button>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <select id="kol-select" style="flex: 1;">
+                                        <option value="">-- Không chọn nhân vật KOL --</option>
+                                    </select>
+                                    <div id="kol-thumb-preview" style="width: 42px; height: 42px; border-radius: 6px; border: 1px solid #334155; display: none; overflow: hidden; background: #0f172a;">
+                                        <img id="kol-thumb-img" src="" alt="KOL" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                </div>
+
+                                <!-- Inline Add New KOL Form -->
+                                <div id="new-kol-form" style="display: none; margin-top: 10px; background: rgba(15, 23, 42, 0.7); border: 1px dashed #3b82f6; border-radius: 8px; padding: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <strong style="color: #60a5fa; font-size: 13px;">➕ Thêm Nhân Vật KOL Mới Vào Thư Viện</strong>
+                                        <button type="button" id="btn-close-new-kol" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">✕</button>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <input type="text" id="new-kol-name" placeholder="Tên nhân vật KOL (VD: Mai Anh, Hero...)" style="width: 100%; font-size: 13px;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 8px;">
+                                        <input type="text" id="new-kol-desc" placeholder="Mô tả / phong cách (VD: Nữ 22 tuổi, áo dài trắng...)" style="width: 100%; font-size: 12px;">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Ảnh đại diện nhân vật KOL:</label>
+                                        <input type="file" id="new-kol-file" accept="image/*" style="font-size: 12px; color: #cbd5e1;">
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-sm" id="btn-save-kol" style="width: 100%;">💾 Lưu Vào Thư Viện KOL</button>
+                                </div>
+                            </div>
+
+
                             <!-- Reference Video Section (Support Multi-file & Drag-and-Drop Reorder) -->
                             <div class="form-group">
                                 <div class="form-label-row">
@@ -208,35 +235,34 @@
                                     <label for="model">AI Model</label>
                                     <select id="model">
                                         <option value="Seedance 2.5" selected>Seedance 2.5 (Khuyên dùng)</option>
-                                        <option value="Higgsfield Standard">Higgsfield Standard</option>
-                                    </select>
+                                        </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="duration">Thời Lượng (Duration: 4s - 30s)</label>
                                     <select id="duration">
-                                        <option value="" selected>Mặc định (16s)</option>
-                                        <option value="4s">4 Giây (4s)</option>
-                                        <option value="5s">5 Giây (5s)</option>
-                                        <option value="6s">6 Giây (6s)</option>
-                                        <option value="7s">7 Giây (7s)</option>
-                                        <option value="8s">8 Giây (8s)</option>
-                                        <option value="9s">9 Giây (9s)</option>
-                                        <option value="10s">10 Giây (10s)</option>
-                                        <option value="11s">11 Giây (11s)</option>
-                                        <option value="12s">12 Giây (12s)</option>
-                                        <option value="13s">13 Giây (13s)</option>
-                                        <option value="14s">14 Giây (14s)</option>
-                                        <option value="15s">15 Giây (15s)</option>
-                                        <option value="16s">16 Giây (16s)</option>
-                                        <option value="17s">17 Giây (17s)</option>
-                                        <option value="18s">18 Giây (18s)</option>
-                                        <option value="19s">19 Giây (19s)</option>
-                                        <option value="20s">20 Giây (20s)</option>
-                                        <option value="22s">22 Giây (22s)</option>
-                                        <option value="24s">24 Giây (24s)</option>
-                                        <option value="26s">26 Giây (26s)</option>
-                                        <option value="28s">28 Giây (28s)</option>
-                                        <option value="30s">30 Giây (30s)</option>
+                                        <option value="16" selected>Mặc định (16s)</option>
+                                        <option value="4">4 Giây (4s)</option>
+                                        <option value="5">5 Giây (5s)</option>
+                                        <option value="6">6 Giây (6s)</option>
+                                        <option value="7">7 Giây (7s)</option>
+                                        <option value="8">8 Giây (8s)</option>
+                                        <option value="9">9 Giây (9s)</option>
+                                        <option value="10">10 Giây (10s)</option>
+                                        <option value="11">11 Giây (11s)</option>
+                                        <option value="12">12 Giây (12s)</option>
+                                        <option value="13">13 Giây (13s)</option>
+                                        <option value="14">14 Giây (14s)</option>
+                                        <option value="15">15 Giây (15s)</option>
+                                        <option value="16">16 Giây (16s)</option>
+                                        <option value="17">17 Giây (17s)</option>
+                                        <option value="18">18 Giây (18s)</option>
+                                        <option value="19">19 Giây (19s)</option>
+                                        <option value="20">20 Giây (20s)</option>
+                                        <option value="22">22 Giây (22s)</option>
+                                        <option value="24">24 Giây (24s)</option>
+                                        <option value="26">26 Giây (26s)</option>
+                                        <option value="28">28 Giây (28s)</option>
+                                        <option value="30">30 Giây (30s)</option>
                                     </select>
                                 </div>
                             </div>
@@ -253,47 +279,55 @@
                                 <div class="form-group">
                                     <label for="resolution">Độ Phân Giải</label>
                                     <select id="resolution">
-                                        <option value="720p" selected>720p (HD - Hỗ trợ Unlimited)</option>
+                                        <option value="480p">480p (SD - Tiết kiệm chi phí)</option>
+                                        <option value="720p" selected>720p (HD)</option>
                                         <option value="1080p">1080p (Full HD)</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="form-group unlimited-toggle-row" id="unlimited-row">
-                                <label class="switch-container">
-                                    <input type="checkbox" id="unlimited" checked>
-                                    <span class="switch-slider"></span>
-                                    <span class="switch-text">
-                                        <strong>Kích hoạt Unlimited Mode</strong>
-                                        <small>Tự động bấm chế độ Unlimited khi tạo video</small>
-                                    </span>
-                                </label>
-                            </div>
-
-                            <div class="form-group credit-mode-toggle-row">
-                                <label class="switch-container credit-switch">
-                                    <input type="checkbox" id="credit-mode">
-                                    <span class="switch-slider credit-slider"></span>
-                                    <span class="switch-text">
-                                        <strong>🪙 Chế Độ Credit (CLI)</strong>
-                                        <small>Tạo bằng CLI — song song, tiêu credit, không dùng trình duyệt</small>
-                                    </span>
-                                </label>
-                            </div>
-
-                            <div id="cli-options" style="display:none">
-                                <div class="form-group">
-                                    <div class="credit-info-bar">
-                                        <span class="credit-balance-label">💳 Balance:</span>
-                                        <span id="credit-balance-val" class="credit-balance-val">...</span>
-                                        <span id="credit-parallel-badge" class="credit-parallel-badge"></span>
+                            
+                            <!-- Cost Breakdown Box (Beside / Above Submit) -->
+                            <div class="cost-breakdown-card" id="cost-breakdown-card">
+                                <div class="cost-breakdown-header">
+                                    <span class="cost-breakdown-title">📊 Chi Phí Dự Tính (Kie Seedance 2.5)</span>
+                                    <span class="cost-breakdown-badge" id="cb-status-badge">Live</span>
+                                </div>
+                                <div class="cost-breakdown-grid">
+                                    <div class="cost-item">
+                                        <span class="cost-label">Độ phân giải (Resolution):</span>
+                                        <span class="cost-val" id="cb-resolution">720p</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span class="cost-label">Tốc độ (Rate):</span>
+                                        <span class="cost-val" id="cb-rate">63 cr/s</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span class="cost-label">Thời lượng ra (Output Duration):</span>
+                                        <span class="cost-val" id="cb-output-duration">16s</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span class="cost-label">Chi phí video ra (Output Cost):</span>
+                                        <span class="cost-val" id="cb-output-cost">1008 cr</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span class="cost-label">Tổng video vào (Input Video Duration):</span>
+                                        <span class="cost-val" id="cb-input-duration">0s</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <span class="cost-label">Chi phí video vào (Input Video Cost):</span>
+                                        <span class="cost-val" id="cb-input-cost">0 cr</span>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="cli-model">🤖 Model CLI</label>
-                                    <select id="cli-model">
-                                        <option value="seedance_2_5">Seedance 2.5</option>
-                                    </select>
+                                <div class="cost-breakdown-totals">
+                                    <div class="total-row primary">
+                                        <span class="total-label">Tổng tín dụng (Total Credits):</span>
+                                        <span class="total-val highlight" id="cb-total-credits">1008 cr</span>
+                                    </div>
+                                    <div class="total-row secondary">
+                                        <span class="total-label">Quy đổi USD (USD Equivalent):</span>
+                                        <span class="total-val usd" id="cb-usd-equivalent">$5.040</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -330,35 +364,34 @@
                                         <label for="bulk-model">AI Model</label>
                                         <select id="bulk-model">
                                             <option value="Seedance 2.5" selected>Seedance 2.5</option>
-                                            <option value="Higgsfield Standard">Higgsfield Standard</option>
-                                        </select>
+                                            </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="bulk-duration">Thời Lượng</label>
                                         <select id="bulk-duration">
-                                            <option value="" selected>Mặc định</option>
-                                            <option value="4s">4s</option>
-                                            <option value="5s">5s</option>
-                                            <option value="6s">6s</option>
-                                            <option value="7s">7s</option>
-                                            <option value="8s">8s</option>
-                                            <option value="9s">9s</option>
-                                            <option value="10s">10s</option>
-                                            <option value="11s">11s</option>
-                                            <option value="12s">12s</option>
-                                            <option value="13s">13s</option>
-                                            <option value="14s">14s</option>
-                                            <option value="15s">15s</option>
-                                            <option value="16s">16s</option>
-                                            <option value="17s">17s</option>
-                                            <option value="18s">18s</option>
-                                            <option value="19s">19s</option>
-                                            <option value="20s">20s</option>
-                                            <option value="22s">22s</option>
-                                            <option value="24s">24s</option>
-                                            <option value="26s">26s</option>
-                                            <option value="28s">28s</option>
-                                            <option value="30s">30s</option>
+                                            <option value="16" selected>Mặc định (16s)</option>
+                                            <option value="4">4s</option>
+                                            <option value="5">5s</option>
+                                            <option value="6">6s</option>
+                                            <option value="7">7s</option>
+                                            <option value="8">8s</option>
+                                            <option value="9">9s</option>
+                                            <option value="10">10s</option>
+                                            <option value="11">11s</option>
+                                            <option value="12">12s</option>
+                                            <option value="13">13s</option>
+                                            <option value="14">14s</option>
+                                            <option value="15">15s</option>
+                                            <option value="16">16s</option>
+                                            <option value="17">17s</option>
+                                            <option value="18">18s</option>
+                                            <option value="19">19s</option>
+                                            <option value="20">20s</option>
+                                            <option value="22">22s</option>
+                                            <option value="24">24s</option>
+                                            <option value="26">26s</option>
+                                            <option value="28">28s</option>
+                                            <option value="30">30s</option>
                                         </select>
                                     </div>
                                 </div>
@@ -374,6 +407,7 @@
                                     <div class="form-group">
                                         <label for="bulk-resolution">Độ Phân Giải</label>
                                         <select id="bulk-resolution">
+                                            <option value="480p">480p (SD - Tiết kiệm chi phí)</option>
                                             <option value="720p" selected>720p (Hỗ trợ Unlimited)</option>
                                             <option value="1080p">1080p</option>
                                         </select>
@@ -389,28 +423,60 @@
                                 <div class="preview-list" id="bulk-preview-list"></div>
                             </div>
 
-                            <div class="form-group credit-mode-toggle-row">
-                                <label class="switch-container credit-switch">
-                                    <input type="checkbox" id="bulk-credit-mode">
-                                    <span class="switch-slider credit-slider"></span>
-                                    <span class="switch-text">
-                                        <strong>🪙 Chế Độ Credit (CLI)</strong>
-                                        <small>Tất cả task bulk sẽ chạy song song qua CLI, tiêu credit</small>
-                                    </span>
-                                </label>
-                            </div>
-                            <div id="bulk-cli-options" style="display:none">
-                                <div class="form-group">
-                                    <label for="bulk-cli-model">🤖 Model CLI</label>
-                                    <select id="bulk-cli-model">
-                                        <option value="seedance_2_5">Seedance 2.5</option>
-                                    </select>
-                                </div>
-                            </div>
+                            
 
                             <button id="btn-bulk-import" class="btn btn-primary w-full btn-lg">
                                 <span class="icon">📥</span> Import Hàng Loạt Vào Queue
                             </button>
+                        </div>
+                        <!-- TAB USAGE -->
+                        <div id="usage-tab" class="tab-content">
+                            <div class="usage-summary" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                                <div class="stat-card" style="flex:1; min-width: 220px; background:#1e293b; padding:15px; border-radius:8px; border:1px solid #334155;">
+                                    <div class="stat-label" style="font-size: 12px; color: #94a3b8; display:flex; justify-content:space-between; align-items:center;">
+                                        <span>💳 Kie Real Balance</span>
+                                        <button type="button" id="btn-refresh-usage" class="btn-xs" style="cursor:pointer; background:none; border:none; color:#38bdf8; font-size:14px;" title="Cập nhật lại số dư">🔄</button>
+                                    </div>
+                                    <div class="stat-value" id="usage-balance" style="font-size: 24px; font-weight: bold; color: #4ade80;">-- cr</div>
+                                    <div class="stat-sub" id="usage-balance-usd" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">-- USD</div>
+                                </div>
+                                <div class="stat-card" style="flex:1; min-width: 220px; background:#1e293b; padding:15px; border-radius:8px; border:1px solid #334155;">
+                                    <div class="stat-label" style="font-size: 12px; color: #94a3b8;">📉 Total Actual Consumed (Kie)</div>
+                                    <div class="stat-value" id="usage-total-consumed" style="font-size: 24px; font-weight: bold; color: #f87171;">0 cr</div>
+                                    <div class="stat-sub" id="usage-total-consumed-usd" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">$0.00 USD</div>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <h4 style="margin:0; color: #e2e8f0;">Lịch Sử Chi Phí & Tiêu Hao Tín Dụng</h4>
+                                <span style="font-size:11px; color:#94a3b8;">Actual Credits lấy trực tiếp từ Kie (Never Fabricated)</span>
+                            </div>
+                            <div class="table-container" style="max-height: 480px; overflow: auto; border: 1px solid #334155; border-radius: 6px;">
+                                <table class="data-table usage-table" style="width: 100%; min-width: 1150px; font-size: 12px; border-collapse: collapse;">
+                                     <thead>
+                                         <tr style="background:#0f172a; text-align:left;">
+                                             <th style="padding:8px 10px;">Time</th>
+                                             <th style="padding:8px 10px;">Task Name</th>
+                                             <th style="padding:8px 10px; color:#f87171;">Actual Credits</th>
+                                             <th style="padding:8px 10px; color:#fbbf24;">Estimated Credits</th>
+                                             <th style="padding:8px 10px;">Actual USD</th>
+                                             <th style="padding:8px 10px;">Estimated USD</th>
+                                             <th style="padding:8px 10px;">Creator</th>
+                                             <th style="padding:8px 10px;">Resolution</th>
+                                             <th style="padding:8px 10px;">Output Duration</th>
+                                             <th style="padding:8px 10px;">Input Video Duration</th>
+                                             <th style="padding:8px 10px;">Model</th>
+                                             <th style="padding:8px 10px;">Task ID</th>
+                                             <th style="padding:8px 10px;">Status</th>
+                                         </tr>
+                                     </thead>
+                                    <tbody id="usage-table-body">
+                                        <tr>
+                                            <td colspan="13" class="text-center" style="padding: 24px; color: #94a3b8; text-align: center;">Chưa có dữ liệu usage.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -422,64 +488,22 @@
                 <div class="card monitor-card">
                     <div class="card-header monitor-header">
                         <div class="monitor-title">
-                            <h2><span class="header-icon">📡</span> Live Monitor & CDP Stream</h2>
+                            <h2><span class="header-icon">📡</span> Live Monitor & System Logs</h2>
                             <span id="active-task-id" class="task-id-tag">Chưa có task</span>
                         </div>
                         <span id="active-task-badge" class="task-badge idle">Idle</span>
                     </div>
 
                     <div class="card-body monitor-body">
-                        <!-- 10-Step Pipeline Progress Section -->
-                        <div class="pipeline-progress-box">
-                            <div class="progress-info">
-                                <div class="step-info-col">
-                                    <span class="step-label">Tiến Trình 10 Bước:</span>
-                                    <span id="current-step-title" class="step-title">Sẵn sàng chờ lệnh...</span>
-                                </div>
-                                <span id="progress-percent" class="progress-percent">0%</span>
-                            </div>
-
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" id="progress-fill"></div>
-                            </div>
-
-                            <!-- 10-Step Milestone Visual Track -->
-                            <div class="milestones-track" id="milestones-track">
-                                <div class="milestone-step" data-step="1" title="1. Điều hướng Studio">1</div>
-                                <div class="milestone-step" data-step="2" title="2. Nhập Prompt">2</div>
-                                <div class="milestone-step" data-step="3" title="3. Dọn ảnh cũ">3</div>
-                                <div class="milestone-step" data-step="4" title="4. Upload ảnh mới">4</div>
-                                <div class="milestone-step" data-step="5" title="5. Chọn Model AI">5</div>
-                                <div class="milestone-step" data-step="6" title="6. Chọn Duration">6</div>
-                                <div class="milestone-step" data-step="7" title="7. Chọn Aspect Ratio">7</div>
-                                <div class="milestone-step" data-step="8" title="8. Chọn Resolution">8</div>
-                                <div class="milestone-step" data-step="9" title="9. Bật Unlimited">9</div>
-                                <div class="milestone-step" data-step="10" title="10. Bấm Generate">10</div>
-                            </div>
-                        </div>
-
                         <!-- Split Preview: Live Screenshot & Real-Time Logs -->
-                        <div class="monitor-grid">
-                            <!-- Live Screenshot Stream -->
-                            <div class="preview-box">
-                                <div class="box-header">
-                                    <h3><span class="stream-pulse">●</span> Xem Trước Trực Tiếp (Live Stream)</h3>
-                                </div>
-                                <div class="preview-container">
-                                    <img id="live-screenshot" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='360'><rect width='100%' height='100%' fill='%230b0e17'/><text x='50%' y='50%' fill='%23475569' font-family='sans-serif' font-size='14' text-anchor='middle'>Sẵn sàng kết nối Chrome CDP</text></svg>" alt="Live Preview">
-                                    <div class="stream-overlay-tag">CDP 9333</div>
-                                </div>
-                            </div>
 
+                        <div class="monitor-grid">
                             <!-- Live Terminal Logs -->
                             <div class="logs-box">
                                 <div class="box-header" style="flex-wrap: wrap; gap: 8px;">
                                     <div class="terminal-tabs" id="terminal-tabs">
                                         <button type="button" class="terminal-tab-btn active" id="tab-log-all" data-target="logs-container">
                                             <span>💻</span> Toàn Bộ Hệ Thống
-                                        </button>
-                                        <button type="button" class="terminal-tab-btn cli-tab" id="tab-log-cli" data-target="cli-logs-container">
-                                            <span>⚡</span> Luồng CLI Cloud
                                         </button>
                                     </div>
                                     <div class="logs-actions">
@@ -491,10 +515,7 @@
                                     </div>
                                 </div>
                                 <div class="terminal-logs" id="logs-container">
-                                    <div class="log-line info">[Khởi động] Hệ thống Higgsfield Queue Dashboard đã sẵn sàng.</div>
-                                </div>
-                                <div class="terminal-logs hidden" id="cli-logs-container">
-                                    <div class="log-line info" style="color: #818cf8;">[Khởi động] Kênh giám sát luồng Higgsfield CLI Cloud sẵn sàng.</div>
+                                    <div class="log-line info">[Khởi động] Hệ thống GTF Video AI Studio đã sẵn sàng.</div>
                                 </div>
                             </div>
                         </div>
@@ -532,7 +553,7 @@
                                     <th>Prompt & Ảnh Tham Chiếu</th>
                                     <th width="160">Cấu Hình</th>
                                     <th width="110">Trạng Thái</th>
-                                    <th width="180">Tiến Độ & Bước</th>
+                                    <th width="180">Tiến Độ & Trạng Thái</th>
                                     <th width="110">Thời Gian</th>
                                     <th width="100" class="text-center">Hành Động</th>
                                 </tr>
@@ -568,7 +589,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=4"></script>
+    <script src="/studio/studio.js"></script>
 </body>
 </html>
 
