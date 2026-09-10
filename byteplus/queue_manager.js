@@ -251,13 +251,12 @@ export class ByteplusQueueManager extends EventEmitter {
     }
 
     clearCompleted() {
-        const before = this.tasks.length;
-        this.store.data.tasks = this.tasks.filter(t => t.status !== 'completed');
-        const removed = before - this.store.data.tasks.length;
-        this.store.save();
-        this.emit('queue-cleared', removed);
-        this.emit('queue-updated');
-        return removed;
+        // YÊU CẦU NGHIÊM NGẶT TỪ NGƯỜI DÙNG:
+        // "Cái nút Dọn đã xong là chỉ dọn trên UI thôi backend thì ko nhá đừng có mà dọn cả backend đấy"
+        // Backend tuyệt đối KHÔNG xóa các task completed khỏi database, bảo toàn 100% dữ liệu và video.
+        const completedCount = this.tasks.filter(t => t.status === 'completed').length;
+        this.emit('queue-cleared', 0);
+        return completedCount;
     }
 
     dispatch() {

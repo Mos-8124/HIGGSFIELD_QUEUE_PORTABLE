@@ -20,7 +20,8 @@ let appState = {
     selectedImageName: null,
     autoScrollLogs: true,
     currentPage: 1,
-    pageSize: 15
+    pageSize: 15,
+    clearedCompletedIds: new Set()
 };
 
 // =========================================================================
@@ -633,6 +634,11 @@ function renderQueueTable() {
     // Filter theo Status
     if (appState.activeFilter !== 'all') {
         filtered = filtered.filter(t => t.status === appState.activeFilter);
+    } else if (appState.clearedCompletedIds && appState.clearedCompletedIds.size > 0) {
+        // PER USER REQUIREMENT:
+        // "Cái nút Dọn đã xong là chỉ dọn trên UI thôi backend thì ko nhá đừng có mà dọn cả backend đấy"
+        // Ở tab "Tất Cả", ẩn các task completed mà người dùng đã bấm "Dọn Đã Xong" trên UI
+        filtered = filtered.filter(t => !appState.clearedCompletedIds.has(t.id));
     }
 
     // Filter theo Search Query
@@ -693,13 +699,21 @@ function renderQueueTable() {
     });
 
     if (filtered.length === 0) {
+        const isAllCleared = appState.activeFilter === 'all' && appState.clearedCompletedIds && appState.clearedCompletedIds.size > 0;
         el.queueTableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center empty-msg">
                     <div class="empty-state">
-                        <span class="empty-icon">📭</span>
-                        <p>${appState.tasks.length === 0 ? 'Chưa có task nào trong hàng chờ.' : 'Không tìm thấy task phù hợp với bộ lọc.'}</p>
-                        <small>Tạo task mới từ biểu mẫu bên trái để bắt đầu tạo video.</small>
+                        <span class="empty-icon">${isAllCleared ? '✨' : '📭'}</span>
+                        <p>${isAllCleared 
+                            ? `Màn hình đã được dọn sạch sẽ (Đang ẩn ${appState.clearedCompletedIds.size} task đã hoàn thành).` 
+                            : (appState.tasks.length === 0 ? 'Chưa có task nào trong hàng chờ.' : 'Không tìm thấy task phù hợp với bộ lọc.')}</p>
+                        ${isAllCleared ? `
+                            <div style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
+                                <button type="button" class="btn-xs" style="background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="window.restoreClearedTasks()">👁️ Hiện Lại Trên Bảng</button>
+                                <button type="button" class="btn-xs" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="document.querySelector('[data-filter=\\'completed\\']')?.click()">📋 Xem Tab Hoàn Thành</button>
+                            </div>
+                        ` : '<small>Tạo task mới từ biểu mẫu bên trái để bắt đầu tạo video.</small>'}
                     </div>
                 </td>
             </tr>
@@ -1843,37 +1857,36 @@ if (el.btnPause) el.btnPause.addEventListener('click', () => {
 if (el.btnStop) el.btnStop.addEventListener('click', () => sendControl('stop'));
 
 if (el.btnClear) {
-    el.btnClear.addEventListener('click', async () => {
+    el.btnClear.addEventListener('click', () => {
         const completedTasks = appState.tasks.filter(t => t.status === 'completed');
         if (completedTasks.length === 0) {
-            appendLog({ level: 'info', message: 'ℹ️ Không có task đã hoàn thành nào trong hàng chờ để dọn dẹp.' });
+            appendLog({ level: 'info', message: 'ℹ️ Không có task đã hoàn thành nào trên bảng để dọn dẹp.' });
             return;
         }
 
         const count = completedTasks.length;
-        // Optimistic UI: Dọn sạch ngay trên giao diện người dùng
-        appState.tasks = appState.tasks.filter(t => t.status !== 'completed');
-        appState.stats = calculateStats(appState.tasks);
-        updateUI();
+        // YÊU CẦU NGHIÊM NGẶT CỦA USER:
+        // "Cái nút Dọn đã xong là chỉ dọn trên UI thôi backend thì ko nhá đừng có mà dọn cả backend đấy"
+        // Chỉ ẩn trên giao diện (UI-only), tuyệt đối KHÔNG xóa khỏi database backend hay ổ đĩa.
+        completedTasks.forEach(t => appState.clearedCompletedIds.add(t.id));
 
-        appendLog({ level: 'info', message: `🧹 Đang dọn dẹp ${count} task đã hoàn thành khỏi hàng chờ...` });
-
-        try {
-            const res = await fetch('/api/byteplus/queue/clear-completed', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await res.json();
-            if (data && data.success) {
-                const actualRemoved = typeof data.removed === 'number' ? data.removed : count;
-                appendLog({ level: 'info', message: `🧹 Đã dọn dẹp sạch ${actualRemoved} task đã hoàn thành khỏi hàng chờ.` });
-            }
-        } catch (err) {
-            console.error('Lỗi dọn dẹp task completed:', err);
-            appendLog({ level: 'error', message: '❌ Lỗi kết nối khi dọn dẹp task đã hoàn thành.' });
-        }
+        renderQueueTable();
+        appendLog({ 
+            level: 'info', 
+            message: `🧹 Đã dọn gọn ${count} task hoàn thành khỏi màn hình làm việc (Dữ liệu database & video backend vẫn bảo toàn 100%). Bấm tab "Hoàn Thành" để xem lại bất cứ lúc nào.` 
+        });
     });
 }
+
+// Cho phép khôi phục lại các task đã dọn hiển thị lại trên tab "Tất Cả"
+window.restoreClearedTasks = () => {
+    if (appState.clearedCompletedIds) {
+        const count = appState.clearedCompletedIds.size;
+        appState.clearedCompletedIds.clear();
+        renderQueueTable();
+        appendLog({ level: 'info', message: `👁️ Đã khôi phục hiển thị ${count} task đã hoàn thành trên bảng Tất Cả.` });
+    }
+};
 
 async function sendControl(action) {
     try {
