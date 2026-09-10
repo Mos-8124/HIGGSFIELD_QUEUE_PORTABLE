@@ -16,6 +16,7 @@ import { video_generate, resolveToHostPath, sanitizePrompt } from './video_gener
 import { runCliTask, estimateCost, getAccountCredits, CLI_VIDEO_MODELS } from './cli_generate.js';
 // GTF Video AI Automation V2 — hệ thống thứ hai, độc lập hoàn toàn với luồng Higgsfield ở trên.
 import { createByteplusSubsystem, attachByteplusSockets } from './byteplus/index.js';
+import { setByteplusAuthCookie } from './byteplus/auth.js';
 
 const execAsync = promisify(exec);
 
@@ -186,12 +187,18 @@ async function downloadAndSaveVideo(task, videoUrl) {
 
 const app = express();
 const server = http.createServer(app);
-const io = new SocketIOServer(server, {
-    cors: { origin: '*' }
-});
+const corsOrigins = String(process.env.HQ_CORS_ORIGINS || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+const corsOptions = {
+    origin: corsOrigins.length ? corsOrigins : false,
+    credentials: true
+};
+const io = new SocketIOServer(server, { cors: corsOptions });
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -213,10 +220,19 @@ byteplus.queue.dispatch();
 
 // Cổng vào: / là trang chọn hệ thống, /higgsfield giữ nguyên UI cũ.
 // Đăng ký TRƯỚC express.static để static không tự phục vụ index.html tại '/'.
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gateway.html')));
+app.get('/', (req, res) => {
+    setByteplusAuthCookie(res);
+    res.sendFile(path.join(__dirname, 'public', 'gateway.html'));
+});
 app.get('/higgsfield', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get(['/deeplove', '/Deeplove', '/byteplus'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
-app.get('/studio', (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
+app.get(['/deeplove', '/Deeplove', '/byteplus'], (req, res) => {
+    setByteplusAuthCookie(res);
+    res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html'));
+});
+app.get('/studio', (req, res) => {
+    setByteplusAuthCookie(res);
+    res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html'));
+});
 
 // Phục vụ static files từ public, uploads và downloads
 // index:false — nếu không, express.static sẽ chiếm mất '/' bằng public/index.html.

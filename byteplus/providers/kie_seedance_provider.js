@@ -445,6 +445,11 @@ export class KieSeedanceProvider {
             e.code = 'KIE_RESULT_MISSING';
             throw e;
         }
+        if (!isPublicHttpsUrl(targetUrl)) {
+            const e = new Error('KIE_OUTPUT_URL_INVALID: URL video kết quả không phải HTTPS công khai.');
+            e.code = 'KIE_OUTPUT_URL_INVALID';
+            throw e;
+        }
 
         ensureDir(path.dirname(destPath));
 

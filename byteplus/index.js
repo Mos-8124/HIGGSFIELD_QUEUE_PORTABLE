@@ -21,6 +21,7 @@ import { LocalKolAssetProvider } from './assets/local_kol_asset_provider.js';
 import { KolLibrary } from './kol_library.js';
 import { ByteplusQueueManager } from './queue_manager.js';
 import { createByteplusRouter } from './routes.js';
+import { socketToken, tokenMatches } from './auth.js';
 
 export function createByteplusSubsystem({
     provider: customProvider,
@@ -83,6 +84,12 @@ export function createByteplusSubsystem({
  */
 export function attachByteplusSockets(io, subsystem) {
     const nsp = io.of('/byteplus');
+    nsp.use((socket, next) => {
+        if (tokenMatches(socketToken(socket))) return next();
+        const err = new Error('Unauthorized');
+        err.data = { code: 'HQ_API_TOKEN_REQUIRED' };
+        next(err);
+    });
     const { queue, kols } = subsystem;
 
     const pushQueue = () => nsp.emit('byteplus:queue-updated', queue.snapshot());

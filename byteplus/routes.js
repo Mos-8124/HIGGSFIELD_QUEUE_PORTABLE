@@ -13,6 +13,7 @@ import { ValidationError } from './task_factory.js';
 import { calculateKieQuote, KIE_CREDIT_USD_RATE } from './kie_pricing.js';
 import { usageManager } from './usage_manager.js';
 import { KieSeedanceProvider } from './providers/kie_seedance_provider.js';
+import { requireByteplusAuth } from './auth.js';
 
 function fail(res, err, fallbackStatus = 400) {
     const status = err instanceof ValidationError ? 422 : fallbackStatus;
@@ -25,6 +26,7 @@ function fail(res, err, fallbackStatus = 400) {
 
 export function createByteplusRouter({ queue, kols }) {
     const router = express.Router();
+    router.use(requireByteplusAuth);
     router.use(express.json({ limit: '25mb' }));
     router.use(byteplusMultipart(config.uploadsDir));
 
