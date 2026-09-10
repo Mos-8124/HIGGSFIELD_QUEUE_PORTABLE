@@ -107,6 +107,7 @@ export class UsageManager {
     }
 
     getSummary({ realBalance = null } = {}) {
+        this.load();
         // Tổng credits đã tiêu chỉ tính từ các task có actualCredits thật
         const totalActualCredits = this.records.reduce((acc, r) => {
             return r.actualCredits !== null && Number.isFinite(r.actualCredits) ? acc + r.actualCredits : acc;

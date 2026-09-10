@@ -194,8 +194,19 @@ socket.on('byteplus:task-updated', (task) => {
     } else if (task.status === 'completed' || task.status === 'failed') {
         if (el.progressPercent) el.progressPercent.textContent = (task.progress || 100) + '%';
         if (el.progressFill) el.progressFill.style.width = (task.progress || 100) + '%';
+        loadUsageSummary();
+        refreshCreditBalance();
     }
     renderQueueTable();
+});
+
+socket.on('byteplus:task-completed', () => {
+    loadUsageSummary();
+    refreshCreditBalance();
+});
+
+socket.on('byteplus:task-created', () => {
+    loadUsageSummary();
 });
 
 socket.on('byteplus:queue-updated', (data) => {
@@ -2013,16 +2024,21 @@ async function loadUsageSummary() {
         const balanceUsdEl = document.getElementById('usage-balance-usd');
         const cliBalanceEl = document.getElementById('credit-balance-val');
         
+        const balNum = Number(data.balance ?? data.credits);
         if (data.configured === false || data.isConfigured === false) {
             if (balanceEl) balanceEl.textContent = 'Chưa cấu hình KIE_API_KEY';
             if (balanceUsdEl) balanceUsdEl.textContent = '-- USD';
             if (cliBalanceEl) cliBalanceEl.textContent = 'No Key';
-        } else if (Number.isFinite(data.balance)) {
-            const balStr = `${Number(data.balance).toLocaleString('en-US')} cr`;
-            const balUsdStr = `$${Number(data.usd || data.balanceUsd || 0).toFixed(2)} USD`;
+            if (el.statCredits) el.statCredits.textContent = 'No Key';
+        } else if (Number.isFinite(balNum)) {
+            const balStr = `${balNum.toLocaleString('vi-VN')} cr`;
+            const balUsd = Number(data.usd ?? (balNum * 0.005).toFixed(2));
+            const balUsdStr = `$${balUsd.toFixed(2)} USD`;
             if (balanceEl) balanceEl.textContent = balStr;
             if (balanceUsdEl) balanceUsdEl.textContent = balUsdStr;
-            if (cliBalanceEl) cliBalanceEl.textContent = balStr;
+            if (cliBalanceEl) cliBalanceEl.textContent = `${balNum.toLocaleString('vi-VN')} credits`;
+            if (el.statCredits) el.statCredits.textContent = balNum.toLocaleString('vi-VN');
+            appCreditState.balance = balNum;
         } else {
             if (balanceEl) balanceEl.textContent = 'Không lấy được số dư';
             if (balanceUsdEl) balanceUsdEl.textContent = '-- USD';
@@ -2034,8 +2050,36 @@ async function loadUsageSummary() {
             const sum = data.usageSummary;
             const consumedEl = document.getElementById('usage-total-consumed');
             const consumedUsdEl = document.getElementById('usage-total-consumed-usd');
-            if (consumedEl) consumedEl.textContent = `${sum.totalConsumed != null ? sum.totalConsumed : (sum.totalConsumedActual != null ? sum.totalConsumedActual : 0)} cr`;
-            if (consumedUsdEl) consumedUsdEl.textContent = `$${Number(sum.totalUsd || sum.totalConsumedActualUsd || 0).toFixed(2)} USD`;
+            
+            // Tính tổng tiêu hao từ danh sách bản ghi
+            let totalActualCredits = 0;
+            let totalEstCompletedCredits = 0;
+            if (Array.isArray(sum.records)) {
+                for (const r of sum.records) {
+                    if (r.actualCredits !== null && r.actualCredits !== undefined && Number.isFinite(Number(r.actualCredits))) {
+                        totalActualCredits += Number(r.actualCredits);
+                    }
+                    if (r.status === 'completed') {
+                        const est = (r.estimatedCredits != null && Number.isFinite(Number(r.estimatedCredits)))
+                            ? Number(r.estimatedCredits)
+                            : 0;
+                        totalEstCompletedCredits += (r.actualCredits !== null && Number.isFinite(Number(r.actualCredits)))
+                            ? Number(r.actualCredits)
+                            : est;
+                    }
+                }
+            }
+
+            const finalConsumed = (sum.totalConsumed && sum.totalConsumed > 0)
+                ? sum.totalConsumed
+                : (totalActualCredits > 0 ? totalActualCredits : totalEstCompletedCredits);
+            const isEst = (!sum.totalConsumed || sum.totalConsumed === 0) && totalActualCredits === 0 && totalEstCompletedCredits > 0;
+            const finalUsd = (sum.totalUsd && sum.totalUsd > 0 && !isEst)
+                ? sum.totalUsd
+                : Number((finalConsumed * 0.005).toFixed(2));
+
+            if (consumedEl) consumedEl.textContent = `${finalConsumed.toLocaleString('vi-VN')} cr`;
+            if (consumedUsdEl) consumedUsdEl.textContent = `$${Number(finalUsd).toFixed(2)} USD${isEst ? ' (ước tính)' : ''}`;
             
             // 3. Render 13 Columns Table
             const tbody = document.getElementById('usage-table-body');
@@ -2089,24 +2133,24 @@ async function loadUsageSummary() {
                             const actU = (r.actualUsd !== null && r.actualUsd !== undefined && Number.isFinite(Number(r.actualUsd)))
                                 ? Number(r.actualUsd)
                                 : Number((actCr * 0.005).toFixed(4));
-                            actualCreditsStr = `<span style="color: #f87171; font-weight: 700;">-${actCr} cr</span>`;
+                            actualCreditsStr = `<span style="color: #f87171; font-weight: 700;">-${actCr.toLocaleString('vi-VN')} cr</span>`;
                             actualUsdStr = `<span style="color: #f87171; font-weight: 500;">-$${actU.toFixed(3)}</span>`;
                         } else if (r.status === 'completed') {
                             // Task completed nhưng chưa có Kie billing trực tiếp -> hiển thị theo định mức tiêu hao
-                            actualCreditsStr = `<span style="color: #f87171; font-weight: 700;">-${estCredits} cr</span> <small style="color: #94a3b8; font-size: 10px;">(ước tính)</small>`;
+                            actualCreditsStr = `<span style="color: #f87171; font-weight: 700;">-${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: #94a3b8; font-size: 10px;">(ước tính)</small>`;
                             actualUsdStr = `<span style="color: #f87171; font-weight: 500;">-$${estUsd.toFixed(3)}</span>`;
                         } else if (r.status === 'running') {
-                            actualCreditsStr = `<span style="color: #38bdf8; font-weight: 600;">~${estCredits} cr</span> <small style="color: #38bdf8; font-size: 10px;">(đang chạy)</small>`;
+                            actualCreditsStr = `<span style="color: #38bdf8; font-weight: 600;">~${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: #38bdf8; font-size: 10px;">(đang chạy)</small>`;
                             actualUsdStr = `<span style="color: #38bdf8;">~$${estUsd.toFixed(3)}</span>`;
                         } else if (r.status === 'pending') {
-                            actualCreditsStr = `<span style="color: #fbbf24; font-weight: 500;">~${estCredits} cr</span> <small style="color: #fbbf24; font-size: 10px;">(dự kiến)</small>`;
+                            actualCreditsStr = `<span style="color: #fbbf24; font-weight: 500;">~${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: #fbbf24; font-size: 10px;">(dự kiến)</small>`;
                             actualUsdStr = `<span style="color: #fbbf24;">~$${estUsd.toFixed(3)}</span>`;
                         } else {
                             actualCreditsStr = `<span style="color: #64748b;">0 cr</span> <small style="color: #64748b; font-size: 10px;">(lỗi)</small>`;
                             actualUsdStr = `<span style="color: #64748b;">$0.000</span>`;
                         }
 
-                        const estCreditsStr = `<span style="color: #fbbf24; font-weight: 600;">${estCredits} cr</span>`;
+                        const estCreditsStr = `<span style="color: #fbbf24; font-weight: 600;">${estCredits.toLocaleString('vi-VN')} cr</span>`;
                         const estUsdStr = `<span style="color: #34d399;">$${estUsd.toFixed(3)}</span>`;
 
                         tr.innerHTML = `
@@ -2141,13 +2185,24 @@ document.getElementById('tab-btn-usage')?.addEventListener('click', () => {
     loadUsageSummary();
 });
 
-// Refresh button
-document.getElementById('btn-refresh-usage')?.addEventListener('click', () => {
-    loadUsageSummary();
+// Refresh button with visual spin animation
+document.getElementById('btn-refresh-usage')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-refresh-usage');
+    if (btn) {
+        btn.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        btn.style.transform = 'rotate(360deg)';
+    }
+    await Promise.all([loadUsageSummary(), refreshCreditBalance()]);
+    setTimeout(() => {
+        if (btn) {
+            btn.style.transition = 'none';
+            btn.style.transform = 'none';
+        }
+    }, 600);
 });
 
 // Initial load
-setTimeout(loadUsageSummary, 500);
+setTimeout(loadUsageSummary, 300);
 
 
 // =========================================================================
