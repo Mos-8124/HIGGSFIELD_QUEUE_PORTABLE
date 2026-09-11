@@ -6,6 +6,7 @@ import { runApiServerTests } from './api_server.test.js';
 import { runByteplusTests } from './byteplus.test.js';
 import { runOpenRouterTests } from './openrouter.test.js';
 import { runKieTests } from './kie.test.js';
+import { runKieModelsTests } from './kie_models.test.js';
 import { runKiePricingTests } from './kie_pricing.test.js';
 import { runUsageManagerTests } from './usage_manager.test.js';
 
@@ -132,6 +133,7 @@ export async function runAllTests() {
         await runByteplusTests(reporter);
         await runOpenRouterTests(reporter);
         await runKieTests(reporter);
+        await runKieModelsTests(reporter);
         await runKiePricingTests(reporter);
         await runUsageManagerTests(reporter);
 

@@ -29,6 +29,7 @@ import path from 'path';
 import { config } from '../config.js';
 import { ensureDir } from '../store.js';
 import { isExpired, normalizeKieHttpError } from './kie_file_provider.js';
+import { resolveKieModel } from '../kie_models.js';
 
 /** Kiểm tra URL có phải HTTPS công khai (chặn localhost / LAN / file://). */
 export function isPublicHttpsUrl(urlStr) {
@@ -199,12 +200,21 @@ export class KieSeedanceProvider {
             else if (ref.type === 'audio') audioUrls.push(url);
         }
 
-        const input = {
-            prompt: (task && task.prompt ? String(task.prompt) : '').trim(),
-            output_format: 'mp4'
-        };
+        // Model theo tung task (2.5 / 2.0 / 2.0 Fast); fallback ve model mac dinh cua provider.
+        const modelEntry = resolveKieModel((task && (task.kieModel || task.model)) || this.model);
 
-        if (Number.isFinite(Number(task && task.duration))) input.duration = Number(task.duration);
+        const input = {
+            prompt: (task && task.prompt ? String(task.prompt) : '').trim()
+        };
+        // output_format chi Seedance 2.5 nhan; 2.0/2.0 Fast khong co truong nay.
+        if (modelEntry.sendOutputFormat) input.output_format = 'mp4';
+
+        if (Number.isFinite(Number(task && task.duration))) {
+            // Clamp thoi luong vao khoang model ho tro (2.0/2.0 Fast toi da 15s).
+            let dur = Number(task.duration);
+            dur = Math.max(modelEntry.minDuration, Math.min(modelEntry.maxDuration, dur));
+            input.duration = dur;
+        }
         if (task && task.resolution) input.resolution = task.resolution;
         if (task && task.aspectRatio) input.aspect_ratio = task.aspectRatio;
         if (task && task.generateAudio !== undefined) input.generate_audio = task.generateAudio !== false;
@@ -213,7 +223,7 @@ export class KieSeedanceProvider {
         if (videoUrls.length) input.reference_video_urls = videoUrls;
         if (audioUrls.length) input.reference_audio_urls = audioUrls;
 
-        const body = { model: this.model, input };
+        const body = { model: modelEntry.id, input };
         if (this.callbackUrl) body.callBackUrl = this.callbackUrl;
         return body;
     }

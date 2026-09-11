@@ -132,7 +132,7 @@ không phải lỗi ứng dụng:
 | V1 Higgsfield CDP | Đang dùng production. Không thay đổi trong các phiên gần đây. |
 | V1 CLI credit mode | Không chạy được trên máy này (thiếu CLI). |
 | V2 Mock E2E | **COMPLETED** — RUNTIME CONFIRMED |
-| V2 Kie.ai (Seedance 2.5) | **IMPLEMENTED — LUỒNG ACTIVE MỚI** — KieSeedanceProvider + KieFileStorageProvider + LocalKolAssetProvider + Live Pricing & Usage Ledger. Chờ user điền `KIE_API_KEY` và đặt `GTF_VIDEO_PROVIDER=kie` rồi restart |
+| V2 Kie.ai (Seedance 2.5 / 2.0 Mini / 2.0 Fast) | **ACTIVE — 3 MODEL** — chung 1 `KIE_API_KEY`. Model chọn per-task, UI gửi đúng model id lên Kie (`bytedance/seedance-2-5` / `-2-mini` / `-2-fast`). Giá per-model theo bảng chuẩn Kie (2.5: 480/720/1080p 4-30s; Mini & Fast: 480/720p 4-15s). KieFileStorageProvider + LocalKolAssetProvider + Live Pricing & Usage Ledger. Chờ user điền `KIE_API_KEY` |
 | V2 OpenRouter (Seedance 2.5) | **INACTIVE FALLBACK** — code giữ nguyên, không nằm trong luồng active |
 | V2 BytePlus ModelArk (Seedance 1.5 Pro) | **INACTIVE FALLBACK** — code giữ nguyên, không nằm trong luồng active |
 | V2 BytePlus TOS | **NOT USED khi provider=kie** — không được khởi tạo; chỉ dùng khi quay lại provider byteplus/openrouter |
@@ -279,6 +279,28 @@ từ mốc thời gian thật lưu trong registry nên job sống sót qua resta
 ---
 
 # 10. LATEST MEANINGFUL CHANGES
+
+## 2026-09-11 — `task-kie-mini-replace-standard` (MOI NHAT)
+
+Sua lai 2 model them dung y nguoi dung: **Seedance 2.0 Mini** (`bytedance/seedance-2-mini`)
+va **Seedance 2.0 Fast** (`bytedance/seedance-2-fast`) — thay cho ban standard 2.0 o snapshot truoc.
+Gia CONFIRMED tu kie.ai: Mini 480p 2.4/3.8 · 720p 5.0/8.2 ; Fast 480p 6.8/11.7 · 720p 15/24.8.
+Ca hai: duration 4-15s, chi 480p/720p, khong output_format. UI khoa 1080p + duration>15 cho 2 model nay.
+End-to-end da chung minh: UI chon model nao -> POST createTask gui dung model id do.
+npm test 173/173. Chi tiet: HANDOFF_SNAPSHOTS/2026-09-11/HANDOFF_SNAPSHOT_002.md.
+
+
+## 2026-09-11 — `task-kie-multimodel-2.0`
+
+Them 2 option model Seedance **2.0** va **2.0 Fast** vao luong Kie (dung chung KIE_API_KEY voi 2.5).
+- Registry `byteplus/kie_models.js`: 2.5=`bytedance/seedance-2-5`, 2.0=`bytedance/seedance-2`,
+  2.0 Fast=`bytedance/seedance-2-fast`; model chon per-task (task.model/kieModel).
+- Gia theo TUNG model, cach tinh giong 2.5 (chuan Kie). 2.5 & 2.0 Fast lay rate CONFIRMED tu kie.ai;
+  2.0 standard quy doi tu USD/s (Kie khong co trang gia cong khai) — CAN XAC NHAN.
+- 2.0/2.0 Fast: duration toi da 15s (clamp), bo output_format; 2.0 Fast chi 480p/720p (UI khoa 1080p).
+- npm test 173/173 PASS; live verify cost doi dung theo model tren cong 20140.
+Chi tiet: `HANDOFF_SNAPSHOTS/2026-09-11/HANDOFF_SNAPSHOT_001.md`. Backup: `docs/BACKUPS/2026-09-11/task-seedance-2.0-models/`.
+
 
 ## 2026-09-09 — `task-deeplove-fullscreen-concurrency` (MỚI NHẤT)
 

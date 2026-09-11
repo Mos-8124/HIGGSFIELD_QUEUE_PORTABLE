@@ -67,8 +67,9 @@ export function createByteplusRouter({ queue, kols }) {
     // -- Live Cost Estimator Endpoint --
     router.post('/pricing/quote', (req, res) => {
         try {
-            const { resolution, outputDuration, inputVideoDuration } = req.body;
+            const { resolution, outputDuration, inputVideoDuration, model } = req.body;
             const quote = calculateKieQuote({
+                model,
                 resolution,
                 outputDuration: Number(outputDuration) || 4,
                 inputVideoDuration: Number(inputVideoDuration) || 0
@@ -188,6 +189,7 @@ export function createByteplusRouter({ queue, kols }) {
                 inputVideoDuration = 4;
             }
             const quote = calculateKieQuote({
+                model: body.model,
                 resolution: body.resolution || '720p',
                 outputDuration: Number(body.duration) || 16,
                 inputVideoDuration
@@ -248,6 +250,7 @@ export function createByteplusRouter({ queue, kols }) {
                 inputVideoDuration = 4;
             }
             const quote = calculateKieQuote({
+                model: body.model,
                 resolution: body.resolution || '480p',
                 outputDuration: Number(body.duration) || 4,
                 inputVideoDuration
@@ -266,6 +269,7 @@ export function createByteplusRouter({ queue, kols }) {
             const inputs = items.map(it => {
                 const combined = { ...shared, ...it };
                 const quote = combined.quote || calculateKieQuote({
+                    model: combined.model,
                     resolution: combined.resolution || '720p',
                     outputDuration: Number(combined.duration) || 16,
                     inputVideoDuration: Number(combined.inputVideoDuration) || 0
@@ -300,6 +304,7 @@ export function createByteplusRouter({ queue, kols }) {
                     prompt: promptText
                 };
                 const quote = combined.quote || calculateKieQuote({
+                    model: combined.model,
                     resolution: combined.resolution || '720p',
                     outputDuration: Number(combined.duration) || 16,
                     inputVideoDuration: Number(combined.inputVideoDuration) || 0

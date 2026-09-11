@@ -316,6 +316,11 @@ async function updateKieCostEstimate() {
     
     if (!resEl || !durEl) return;
     
+    const modelEl = isBulkActive
+        ? (document.getElementById('bulk-model') || document.getElementById('model'))
+        : (document.getElementById('model') || document.getElementById('bulk-model'));
+    const modelVal = modelEl ? modelEl.value : 'Seedance 2.5';
+
     const resolution = resEl.value || '720p';
     let outputDuration = parseInt(durEl.value, 10);
     if (isNaN(outputDuration)) outputDuration = 16;
@@ -338,7 +343,7 @@ async function updateKieCostEstimate() {
         const res = await fetch('/api/byteplus/pricing/quote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ resolution, outputDuration, inputVideoDuration: totalInputVideoDuration })
+            body: JSON.stringify({ model: modelVal, resolution, outputDuration, inputVideoDuration: totalInputVideoDuration })
         });
         const data = await res.json();
         if (data.success && data.quote) {
@@ -374,11 +379,63 @@ async function updateKieCostEstimate() {
         console.error('Lỗi tính phí Kie:', err);
     }
 }
-setTimeout(updateKieCostEstimate, 300);
+// Gioi han do phan giai theo model (Seedance 2.0 Fast khong ho tro 1080p).
+// Nguon chan ly ben backend (kie_models.js); ben client chi can chan 1080p cho Fast.
+function gateResolutionByModel(modelSelId, resSelId) {
+    const modelSel = document.getElementById(modelSelId);
+    const resSel = document.getElementById(resSelId);
+    if (!modelSel || !resSel) return;
+    // Model khong ho tro 1080p: 2.0 Mini va 2.0 Fast (chi 480p/720p).
+    const no1080 = (modelSel.value === 'Seedance 2.0 Fast' || modelSel.value === 'Seedance 2.0 Mini');
+    let switched = false;
+    [...resSel.options].forEach(opt => {
+        if (opt.value === '1080p') {
+            opt.disabled = no1080;
+            opt.hidden = no1080;
+            if (no1080 && resSel.value === '1080p') { resSel.value = '720p'; switched = true; }
+        }
+    });
+    if (switched) resSel.dispatchEvent(new Event('change'));
+}
+// Gioi han THOI LUONG theo model. 2.5 toi da 30s; 2.0 & 2.0 Fast toi da 15s.
+// Nguon chan ly la kie_models.js ben backend; day chi la ban sao toi thieu cho UI.
+const MODEL_MAX_DURATION = { 'Seedance 2.5': 30, 'Seedance 2.0 Mini': 15, 'Seedance 2.0 Fast': 15 };
+function gateDurationByModel(modelSelId, durSelId) {
+    const modelSel = document.getElementById(modelSelId);
+    const durSel = document.getElementById(durSelId);
+    if (!modelSel || !durSel) return;
+    const maxDur = MODEL_MAX_DURATION[modelSel.value] || 30;
+    let switched = false;
+    [...durSel.options].forEach(opt => {
+        const v = parseInt(opt.value, 10);
+        // Bo qua option "Mac dinh" neu gia tri > maxDur (vi du mac dinh 16s voi model 15s).
+        const over = Number.isFinite(v) && v > maxDur;
+        opt.disabled = over;
+        opt.hidden = over;
+    });
+    const cur = parseInt(durSel.value, 10);
+    if (Number.isFinite(cur) && cur > maxDur) {
+        // Ep ve moc hop le lon nhat con lai (uu tien dung option co san).
+        const valid = [...durSel.options].map(o=>parseInt(o.value,10)).filter(n=>Number.isFinite(n)&&n<=maxDur);
+        durSel.value = String(valid.length ? Math.max(...valid) : maxDur);
+        switched = true;
+    }
+    if (switched) durSel.dispatchEvent(new Event('change'));
+}
+function applyModelGating() {
+    gateResolutionByModel('model', 'resolution');
+    gateResolutionByModel('bulk-model', 'bulk-resolution');
+    gateDurationByModel('model', 'duration');
+    gateDurationByModel('bulk-model', 'bulk-duration');
+}
+
+setTimeout(() => { applyModelGating(); updateKieCostEstimate(); }, 300);
 document.getElementById('resolution')?.addEventListener('change', updateKieCostEstimate);
 document.getElementById('bulk-resolution')?.addEventListener('change', updateKieCostEstimate);
 document.getElementById('duration')?.addEventListener('change', updateKieCostEstimate);
 document.getElementById('bulk-duration')?.addEventListener('change', updateKieCostEstimate);
+document.getElementById('model')?.addEventListener('change', () => { gateResolutionByModel('model', 'resolution'); gateDurationByModel('model', 'duration'); updateKieCostEstimate(); });
+document.getElementById('bulk-model')?.addEventListener('change', () => { gateResolutionByModel('bulk-model', 'bulk-resolution'); gateDurationByModel('bulk-model', 'bulk-duration'); updateKieCostEstimate(); });
 document.getElementById('duration')?.addEventListener('input', updateKieCostEstimate);
 document.getElementById('bulk-duration')?.addEventListener('input', updateKieCostEstimate);
 document.getElementById('videoFileInput')?.addEventListener('change', () => setTimeout(updateKieCostEstimate, 300));
@@ -1603,7 +1660,7 @@ if (el.singleForm) {
         formData.append('prompt', promptVal);
         if (creatorVal) formData.append('creator', creatorVal);
         if (taskNameVal) formData.append('taskName', taskNameVal);
-        formData.append('model', 'Seedance 2.5');
+        formData.append('model', el.model ? el.model.value : 'Seedance 2.5');
         const durParsed = el.duration ? (parseInt(el.duration.value, 10) || 16) : 16;
         formData.append('duration', durParsed);
         formData.append('aspectRatio', el.aspectRatio ? el.aspectRatio.value : '16:9');
@@ -1793,7 +1850,7 @@ if (el.btnBulkImport) {
         const options = {
             creator: bulkCreatorVal,
             taskName: bulkTaskNameVal,
-            model: 'Seedance 2.5',
+            model: el.bulkModel ? el.bulkModel.value : (el.model ? el.model.value : 'Seedance 2.5'),
             duration: el.bulkDuration ? (parseInt(el.bulkDuration.value, 10) || 16) : 16,
             aspectRatio: el.bulkAspectRatio ? el.bulkAspectRatio.value : '16:9',
             resolution: el.bulkResolution ? el.bulkResolution.value : '720p'
