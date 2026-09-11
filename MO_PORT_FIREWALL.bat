@@ -15,9 +15,9 @@ netsh advfirewall firewall add rule name="GTF Video AI Studio (Port 20140)" dir=
 if %ERRORLEVEL% equ 0 (
     echo.
     echo =======================================================================
-    echo ✅ THÀNH CÔNG! Port 20140 đã được mở trên Windows Firewall.
+    echo ✅ THÀNH CÔNG! Port 3100 đã được mở trên Windows Firewall.
     echo 👉 Mọi máy tính/điện thoại trong cùng mạng Wi-Fi/LAN công ty giờ có thể
-    echo    truy cập vào: http://192.168.1.25:20140/deeplove
+    echo    truy cập vào: http://192.168.1.68:3100/0013
     echo =======================================================================
 ) else (
     echo.

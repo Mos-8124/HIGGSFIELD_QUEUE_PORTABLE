@@ -315,6 +315,10 @@ export class ByteplusQueueManager extends EventEmitter {
                     signal,
                     onProgress: p => {
                         task.providerStatus = p.providerStatus;
+                        if (p.providerStatus === 'succeeded') {
+                            this.active.delete(task.id);
+                            this.dispatch();
+                        }
                         this._setStage(task, p.stage, p.progress);
                     }
                 });
@@ -334,6 +338,10 @@ export class ByteplusQueueManager extends EventEmitter {
                     signal,
                     onProgress: p => {
                         task.providerStatus = p.providerStatus;
+                        if (p.providerStatus === 'succeeded') {
+                            this.active.delete(task.id);
+                            this.dispatch();
+                        }
                         this._setStage(task, p.stage, p.progress);
                     }
                 });
@@ -362,6 +370,10 @@ export class ByteplusQueueManager extends EventEmitter {
                 signal,
                 onProgress: p => {
                     task.providerStatus = p.providerStatus;
+                    if (p.providerStatus === 'succeeded') {
+                        this.active.delete(task.id);
+                        this.dispatch();
+                    }
                     this._setStage(task, p.stage, p.progress);
                 }
             });
@@ -394,6 +406,7 @@ export class ByteplusQueueManager extends EventEmitter {
     }
 
     async _finish(task, res) {
+        if (this.active.delete(task.id)) this.dispatch();
         this._setStage(task, 'Downloading', 96);
         if (res && res.outputUrl) {
             task.outputUrl = res.outputUrl;
@@ -413,6 +426,7 @@ export class ByteplusQueueManager extends EventEmitter {
         const dest = safeJoin(config.outputsDir, task.creator, task.taskName);
         ensureDir(dest);
         const file = path.join(dest, safeSegment(task.id) + '.mp4');
+        await new Promise(resolve => setTimeout(resolve, 20));
         await this.provider.download(task.providerTaskId, file, { outputUrl: task.outputUrl });
 
         task.localOutputPath = file;
@@ -425,8 +439,6 @@ export class ByteplusQueueManager extends EventEmitter {
         task.completedAt = new Date().toISOString();
         task.error = null;
 
-        this.active.delete(task.id);
-        
         // Luu actualCredits CHÍNH XÁC từ provider, tuyệt đối không bịa
         const actual = (res && res.billing && Number.isFinite(res.billing.creditsConsumed))
             ? res.billing.creditsConsumed
@@ -437,7 +449,6 @@ export class ByteplusQueueManager extends EventEmitter {
         this.emit('task-completed', task);
         this.emit('task-updated', task);
         this.emit('queue-updated');
-        this.dispatch();
     }
 
     async flush() { await this.store.flush(); }

@@ -2044,7 +2044,7 @@ async function fetchLanInfo() {
             if (lanText && data.lanUrl) {
                 lanText.textContent = '🌐 LAN: ' + data.primaryLanIP + ':' + data.port + ' (Click Copy)';
                 if (lanPill) {
-                    const studioUrl = data.lanUrl + '/deeplove';
+                    const studioUrl = data.lanUrl + '/0013';
                     lanPill.title = 'Nhấp để copy link truy cập LAN: ' + studioUrl;
                     lanPill.onclick = () => {
                         navigator.clipboard.writeText(studioUrl).then(() => {
