@@ -1,4 +1,4 @@
-﻿/**
+/**
  * byteplus/storage/tos_provider.js
  *
  * Real Storage Provider cho BytePlus Torch Object Storage (TOS).
@@ -82,7 +82,7 @@ export function buildObjectKey({
     const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
     const dd = String(date.getUTCDate()).padStart(2, '0');
 
-    const rawName = originalName || (localPath ? path.basename(localPath) : 'file');
+    const rawName = originalName || (localPath ? path.win32.basename(localPath) : 'file');
     // Bóc tách extension sạch
     const rawExt = path.extname(rawName).toLowerCase();
     const cleanExt = rawExt.replace(/[^a-z0-9.]/g, '') || (localPath ? path.extname(localPath).toLowerCase() : '.bin');

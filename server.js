@@ -22,11 +22,11 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cong runtime cua du an. Dung bien rieng HQ_PORT thay vi PORT chung, vi ten
-// PORT hay bi tool khac tren cung may chiem, khien dashboard bind nham cong.
-const PORT = parseInt(process.env.HQ_PORT || '20140', 10);
+// Cong runtime cua du an. Dung bien rieng HQ_PORT hoac PORT chung, mac dinh 3100.
+const PORT = parseInt(process.env.HQ_PORT || process.env.PORT || '3100', 10);
 const CDP_HOST = process.env.CDP_HOST || '127.0.0.1';
 const CDP_PORT = parseInt(process.env.CDP_PORT || '9333', 10);
+const CDP_ENABLED = process.env.CDP_ENABLED === 'true' || process.env.ENABLE_CDP === 'true';
 const DB_PATH = path.join(__dirname, 'queue_db.json');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
@@ -215,8 +215,13 @@ byteplus.queue.dispatch();
 // Đăng ký TRƯỚC express.static để static không tự phục vụ index.html tại '/'.
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gateway.html')));
 app.get('/higgsfield', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get(['/deeplove', '/Deeplove', '/byteplus'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
-app.get('/studio', (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
+app.get([
+    '/0013',
+    '/studio',
+    '/deeplove',
+    '/Deeplove',
+    '/byteplus'
+], (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
 
 // Phục vụ static files từ public, uploads và downloads
 // index:false — nếu không, express.static sẽ chiếm mất '/' bằng public/index.html.
@@ -498,10 +503,22 @@ function fetchCdpInfo(host, port) {
 
 // CDP Health Check & Broadcast
 async function checkCdpStatus() {
+    if (!CDP_ENABLED) {
+        lastCdpStatus = {
+            connected: false,
+            enabled: false,
+            host: CDP_HOST,
+            port: CDP_PORT,
+            checkedAt: new Date().toISOString()
+        };
+        io.emit('cdp_status', lastCdpStatus);
+        return lastCdpStatus;
+    }
     try {
         const info = await fetchCdpInfo(CDP_HOST, CDP_PORT);
         lastCdpStatus = {
             connected: true,
+            enabled: true,
             host: CDP_HOST,
             port: CDP_PORT,
             version: info.Browser || info['User-Agent'] || 'Chrome CDP Ready',
@@ -510,6 +527,7 @@ async function checkCdpStatus() {
     } catch (err) {
         lastCdpStatus = {
             connected: false,
+            enabled: true,
             host: CDP_HOST,
             port: CDP_PORT,
             error: err.message,
@@ -521,9 +539,11 @@ async function checkCdpStatus() {
     return lastCdpStatus;
 }
 
-// Poller định kỳ kiểm tra CDP mỗi 5 giây
-setInterval(checkCdpStatus, 5000);
-checkCdpStatus().catch(() => {});
+// Poller định kỳ kiểm tra CDP mỗi 5 giây (chỉ kích hoạt khi CDP_ENABLED=true)
+if (CDP_ENABLED) {
+    setInterval(checkCdpStatus, 5000);
+    checkCdpStatus().catch(() => {});
+}
 
 // Live Stream Broadcaster khi Idle (khi không có task đang chạy)
 let isCapturingIdle = false;
@@ -671,10 +691,11 @@ async function syncCompletedVideosFromFeed() {
     return syncedCount;
 }
 
-// Chụp cập nhật màn hình Live Stream định kỳ mỗi 3 giây
-setInterval(captureIdleScreenshot, 3000);
-// Tự động quét đồng bộ video link mỗi 15 giây
-setInterval(syncCompletedVideosFromFeed, 15000);
+// Chụp cập nhật màn hình Live Stream định kỳ mỗi 3 giây (chỉ khi CDP bật)
+if (CDP_ENABLED) {
+    setInterval(captureIdleScreenshot, 3000);
+    setInterval(syncCompletedVideosFromFeed, 15000);
+}
 
 // =========================================================================
 // REST API ENDPOINTS
@@ -923,11 +944,11 @@ function handleQueueControl(action) {
         if (!state.isRunning) {
             state.isRunning = true;
             broadcastLog('success', '▶️ Đã KÍCH HOẠT chạy Hàng chờ (Queue Started).');
-            processQueueLoop();
+            if (CDP_ENABLED) processQueueLoop();
             processCliQueue();   // Kích hoạt CLI Credit Mode song song
         } else {
             broadcastLog('info', '▶️ Hàng chờ đang tiếp tục xử lý.');
-            processQueueLoop();
+            if (CDP_ENABLED) processQueueLoop();
             processCliQueue();   // Tiếp tục CLI Credit Mode
         }
     } else if (action === 'pause') {
@@ -1178,6 +1199,10 @@ async function isCliQueueFree() {
 // VÒNG LẶP QUEUE RUNNER TỰ ĐỘNG (PROCESS QUEUE LOOP)
 // =========================================================================
 async function processQueueLoop() {
+    if (!CDP_ENABLED) {
+        isProcessing = false;
+        return;
+    }
     if (!state.isRunning || state.isPaused) {
         isProcessing = false;
         return;
@@ -1602,6 +1627,10 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Higgsfield AI Queue Dashboard running on:`);
     console.log(`   🏠 Local: http://localhost:${PORT}`);
     console.log(`   🌐 LAN:   http://${primaryIP}:${PORT} (Dành cho các máy cùng mạng LAN)`);
-    console.log(`📡 Connected to Chrome CDP at http://${CDP_HOST}:${CDP_PORT}`);
+    if (CDP_ENABLED) {
+        console.log(`📡 Connected to Chrome CDP at http://${CDP_HOST}:${CDP_PORT}`);
+    } else {
+        console.log(`💤 Luồng Chrome CDP: ĐÃ TẮT (CDP disabled)`);
+    }
     console.log(`====================================================`);
 });
