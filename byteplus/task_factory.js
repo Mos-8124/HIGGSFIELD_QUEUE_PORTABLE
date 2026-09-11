@@ -5,6 +5,7 @@
 import crypto from 'crypto';
 import { config } from './config.js';
 import { buildReference, assignAliases } from './reference_manager.js';
+import { resolveKieModel } from './kie_models.js';
 
 export const PIPELINE_STAGES = [
     'Preparing References',
@@ -40,23 +41,27 @@ export function validateTaskInput(input) {
     if (!input.prompt || !String(input.prompt).trim()) errors.push('Thieu prompt mo ta video.');
     if (input.prompt && String(input.prompt).trim().length > 5000) errors.push('Prompt qua dai (toi da 5000 ky tu).');
 
+    // Gioi han theo model duoc chon (Seedance 2.5 / 2.0 / 2.0 Fast).
+    const modelEntry = resolveKieModel(input.model);
+
     const rawDur = typeof input.duration === 'string' ? input.duration.replace(/s$/i, '').trim() : input.duration;
-    const dur = (rawDur === undefined || rawDur === null || rawDur === '') ? 16 : Number(rawDur);
-    if (!Number.isFinite(dur) || dur < lim.durationMin || dur > lim.durationMax) {
-        errors.push('Thoi luong phai tu ' + lim.durationMin + ' den ' + lim.durationMax + ' giay.');
+    const durDefault = Math.min(16, modelEntry.maxDuration);
+    const dur = (rawDur === undefined || rawDur === null || rawDur === '') ? durDefault : Number(rawDur);
+    if (!Number.isFinite(dur) || dur < modelEntry.minDuration || dur > modelEntry.maxDuration) {
+        errors.push(modelEntry.label + ': thoi luong phai tu ' + modelEntry.minDuration + ' den ' + modelEntry.maxDuration + ' giay.');
     }
-    if (input.resolution && !lim.resolutions.includes(input.resolution)) {
-        errors.push('Do phan giai khong ho tro: ' + input.resolution);
+    if (input.resolution && !modelEntry.resolutions.includes(input.resolution)) {
+        errors.push(modelEntry.label + ' khong ho tro do phan giai ' + input.resolution + ' (chi: ' + modelEntry.resolutions.join(', ') + ').');
     }
     if (input.aspectRatio && !lim.aspectRatios.includes(input.aspectRatio)) {
         errors.push('Ti le khung hinh khong ho tro: ' + input.aspectRatio);
     }
 
     const refs = Array.isArray(input.references) ? input.references : [];
-    const images = refs.filter(r => r.type === 'image').length;
+    const images = refs.filter(r => r.type === 'image' || r.type === 'kol').length;
     const videos = refs.filter(r => r.type === 'video').length;
-    if (images > lim.maxImages) errors.push('Toi da ' + lim.maxImages + ' anh tham chieu.');
-    if (videos > lim.maxVideos) errors.push('Toi da ' + lim.maxVideos + ' video tham chieu.');
+    if (images > modelEntry.maxImages) errors.push(modelEntry.label + ': toi da ' + modelEntry.maxImages + ' anh/KOL tham chieu.');
+    if (videos > modelEntry.maxVideos) errors.push(modelEntry.label + ': toi da ' + modelEntry.maxVideos + ' video tham chieu.');
     for (const r of refs) {
         if (!['image', 'video', 'kol'].includes(r.type)) errors.push('Loai tham chieu khong hop le: ' + r.type);
         if (r.type === 'kol' && !r.kolId) errors.push('Tham chieu KOL thieu kolId.');
@@ -85,6 +90,10 @@ export function createTask(input) {
         aspectRatio: input.aspectRatio || '9:16',
         resolution: input.resolution || '480p',
         generateAudio: input.generateAudio !== false,
+
+        // Model Seedance duoc chon (2.5 / 2.0 / 2.0 Fast). kieModel = id gui len Kie.
+        model: resolveKieModel(input.model).key,
+        kieModel: resolveKieModel(input.model).id,
 
         status: 'pending',
         pipelineStage: null,
