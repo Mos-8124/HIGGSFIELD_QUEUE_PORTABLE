@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowq — Google Flow Queue</title>
+    <link rel="stylesheet" href="/studio/studio.css">
+    <link rel="stylesheet" href="/studio/flow-queue.css">
+    <script src="/studio/theme.js"></script>
+</head>
+<body>
+    <header class="fq-header">
+        <div class="fq-header-left">
+            <a class="fq-back" href="/byteplus" title="Quay lại GTF Video AI Studio">←</a>
+            <div class="fq-title-wrap">
+                <h1 class="fq-title"><span data-icon="film" aria-hidden="true"></span> Flowq <span class="fq-title-sub">Google Flow Queue</span></h1>
+                <p class="fq-subtitle">Sinh video Veo / ảnh qua Chrome CDP cổng 9334 — labs.google Flow</p>
+            </div>
+        </div>
+        <div class="fq-header-right">
+            <div class="fq-pill" id="fq-cdp-pill" title="Trạng thái kết nối Chrome CDP 9334">
+                <span class="fq-dot" id="fq-cdp-dot"></span>
+                <span id="fq-cdp-text">CDP: đang kiểm tra…</span>
+            </div>
+            <div class="fq-pill" id="fq-worker-pill" title="Trạng thái worker hàng chờ">
+                <span class="fq-dot" id="fq-worker-dot"></span>
+                <span id="fq-worker-text">Worker: —</span>
+            </div>
+            <button type="button" class="fq-pill" data-theme-toggle aria-label="Chuyển nền sáng/tối" style="cursor:pointer;font:inherit;color:inherit;">
+                <span data-icon="moon" aria-hidden="true"></span>
+                <span>Nền</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="fq-main">
+        <!-- Cột trái: form tạo job -->
+        <section class="fq-card fq-form-card">
+            <h2 class="fq-card-title"><span data-icon="plus" aria-hidden="true"></span> Tạo Job Flow</h2>
+
+            <label class="fq-label" for="fq-mode">Chế độ</label>
+            <select id="fq-mode" class="fq-input">
+                <option value="video" selected>Video (Omni Flash / Veo)</option>
+                <option value="image">Ảnh (Nano Banana)</option>
+            </select>
+
+            <label class="fq-label" for="fq-model">Model</label>
+            <select id="fq-model" class="fq-input"></select>
+            <div id="fq-model-hint" class="fq-badge fq-badge-info" style="display:none"></div>
+
+            <label class="fq-label" for="fq-prompt">Prompt</label>
+            <textarea id="fq-prompt" class="fq-input fq-textarea" rows="5"
+                placeholder="Mô tả video/ảnh muốn Flow sinh ra…"></textarea>
+
+            <div class="fq-row" style="flex-wrap:wrap">
+                <div class="fq-col" style="flex:1 1 90px">
+                    <label class="fq-label" for="fq-ratio">Tỉ lệ</label>
+                    <select id="fq-ratio" class="fq-input"></select>
+                </div>
+                <div class="fq-col" id="fq-resolution-wrap" style="flex:1 1 110px">
+                    <label class="fq-label" for="fq-resolution">Chất lượng</label>
+                    <select id="fq-resolution" class="fq-input">
+                        <option value="360p" selected>360p (Chuẩn)</option>
+                        <option value="720p">720p (HD)</option>
+                    </select>
+                </div>
+                <div class="fq-col" id="fq-duration-wrap" style="flex:1 1 95px">
+                    <label class="fq-label" for="fq-duration">Thời lượng</label>
+                    <select id="fq-duration" class="fq-input">
+                        <option value="4">4 giây</option>
+                        <option value="6">6 giây</option>
+                        <option value="8" selected>8 giây</option>
+                        <option value="10">10 giây</option>
+                    </select>
+                </div>
+                <div class="fq-col" style="flex:1 1 80px">
+                    <label class="fq-label" for="fq-variants">Variants</label>
+                    <select id="fq-variants" class="fq-input">
+                        <option value="1" selected>x1</option>
+                        <option value="2">x2</option>
+                        <option value="3">x3</option>
+                        <option value="4">x4</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="fq-inputmode-wrap">
+                <label class="fq-label" for="fq-inputmode">Phương thức đầu vào</label>
+                <select id="fq-inputmode" class="fq-input">
+                    <option value="ingredients" selected>Thành phần (Ingredients) — ảnh / video làm nguyên liệu tham chiếu</option>
+                    <option value="frames">Khung hình (Frames) — Khung hình đầu &amp; cuối</option>
+                </select>
+            </div>
+
+            <!-- Khối tham chiếu thành phần: 2 ô trực quan Ảnh & Video (Ingredients mode / Image mode) -->
+            <div id="fq-ingredients-section">
+                <label class="fq-label" id="fq-ingredients-label">Nguyên liệu tham chiếu (Tùy chọn)</label>
+                <div class="fq-frames-grid" id="fq-ingredients-grid">
+                    <!-- Ô 1: Ảnh tham chiếu -->
+                    <div class="fq-frame-slot" id="fq-slot-images">
+                        <div class="fq-frame-slot-head">
+                            <span><span data-icon="image" aria-hidden="true"></span> Ảnh tham chiếu <span class="fq-slot-badge" id="fq-images-badge">(0/3)</span></span>
+                            <button type="button" class="fq-btn fq-btn-sm fq-btn-danger" id="fq-images-clear" style="display:none">Xóa hết</button>
+                        </div>
+                        <div class="fq-frame-preview fq-multi-preview" id="fq-images-preview" title="Bấm để chọn ảnh tham chiếu (tối đa 3 ảnh)">
+                            <span class="placeholder" id="fq-images-placeholder">Bấm để tải ảnh tham chiếu<br><small class="fq-hint-muted">(Tối đa 3 ảnh)</small></span>
+                            <div class="fq-thumbs-container" id="fq-images-thumbs" style="display:none"></div>
+                        </div>
+                        <input type="file" id="fq-input-images" accept="image/*,.jpg,.jpeg,.png,.webp" multiple hidden>
+                        <p class="fq-hint fq-hint-tight" id="fq-images-hint">Tối đa 3 ảnh (.jpg, .png, .webp).</p>
+                    </div>
+
+                    <!-- Ô 2: Video tham chiếu -->
+                    <div class="fq-frame-slot" id="fq-slot-video">
+                        <div class="fq-frame-slot-head">
+                            <span><span data-icon="video" aria-hidden="true"></span> Video tham chiếu <span class="fq-slot-badge" id="fq-video-badge">(Tối đa 1)</span></span>
+                            <button type="button" class="fq-btn fq-btn-sm fq-btn-danger" id="fq-video-clear" style="display:none">Xóa</button>
+                        </div>
+                        <div class="fq-frame-preview" id="fq-video-preview" title="Bấm để chọn video tham chiếu">
+                            <span class="placeholder" id="fq-video-placeholder">Bấm để tải video tham chiếu<br><small class="fq-hint-muted">(≤ 10s · Chỉ Omni Flash)</small></span>
+                            <video id="fq-video-preview-el" controls playsinline muted style="display:none;width:100%;height:100%;object-fit:cover;"></video>
+                        </div>
+                        <input type="file" id="fq-input-video" accept="video/*,.mp4,.mov,.webm" hidden>
+                        <p class="fq-hint fq-hint-tight" id="fq-video-hint">Tối đa 1 video (.mp4 ≤ 10s). Chỉ Omni 1.1 Flash hỗ trợ.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khối khung hình đầu - cuối (Frames mode) -->
+            <div id="fq-frames-section" style="display:none">
+                <label class="fq-label">Khung hình tham chiếu</label>
+                <div class="fq-frames-grid">
+                    <div class="fq-frame-slot" id="fq-slot-first">
+                        <div class="fq-frame-slot-head">
+                            <span><span data-icon="film" aria-hidden="true"></span> Khung đầu (Bắt buộc)</span>
+                            <button type="button" class="fq-btn fq-btn-sm fq-btn-danger" id="fq-first-clear" style="display:none">Xóa</button>
+                        </div>
+                        <div class="fq-frame-preview" id="fq-first-preview" title="Bấm để chọn ảnh khung hình đầu">
+                            <span class="placeholder">Bấm để tải ảnh khung đầu</span>
+                        </div>
+                        <input type="file" id="fq-first-file" accept="image/*" hidden>
+                    </div>
+                    <div class="fq-frame-slot" id="fq-slot-last">
+                        <div class="fq-frame-slot-head">
+                            <span><span data-icon="flag" aria-hidden="true"></span> Khung cuối (Tùy chọn)</span>
+                            <button type="button" class="fq-btn fq-btn-sm fq-btn-danger" id="fq-last-clear" style="display:none">Xóa</button>
+                        </div>
+                        <div class="fq-frame-preview" id="fq-last-preview" title="Bấm để chọn ảnh khung hình cuối">
+                            <span class="placeholder">Bấm để tải ảnh khung cuối</span>
+                        </div>
+                        <input type="file" id="fq-last-file" accept="image/*" hidden>
+                    </div>
+                </div>
+                <p class="fq-hint" style="margin:6px 0 2px">Chế độ Khung hình chỉ nhận ảnh (.png, .jpg, .webp). Flow sẽ tạo chuyển động từ Khung đầu sang Khung cuối.</p>
+            </div>
+
+            <button id="fq-submit" class="fq-btn fq-btn-primary"><span data-icon="rocket" aria-hidden="true"></span> Thêm vào hàng chờ &amp; chạy</button>
+            <p class="fq-note"><span data-icon="alert-triangle" aria-hidden="true"></span> Mỗi job tiêu quota của tài khoản Google đang đăng nhập trong Chrome CDP.
+                Hàng chờ chạy tuần tự 1 job/lần (một cửa sổ Chrome).</p>
+            <p id="fq-form-msg" class="fq-msg" hidden></p>
+        </section>
+
+        <!-- Cột phải: cài đặt + hàng chờ -->
+        <section class="fq-right">
+            <div class="fq-card">
+                <h2 class="fq-card-title"><span data-icon="settings" aria-hidden="true"></span> Kết nối</h2>
+                <div class="fq-setting-row">
+                    <span class="fq-setting-key">Chrome CDP</span>
+                    <span class="fq-setting-val" id="fq-cdp-url">http://127.0.0.1:9334</span>
+                </div>
+                <p class="fq-hint">Chưa kết nối? Chạy file <code>MO_CHROME_GOOGLE_FLOW_9334.bat</code> ở thư mục dự án,
+                    đăng nhập Google trong cửa sổ Chrome vừa mở (chỉ cần 1 lần), giữ cửa sổ đó mở.</p>
+                <label class="fq-label" for="fq-workspace">URL project Flow (labs.google/fx/vi/tools/flow/project/…)</label>
+                <div class="fq-inline">
+                    <input type="text" id="fq-workspace" class="fq-input" placeholder="Bỏ trống = trang Flow mặc định">
+                    <button id="fq-save-workspace" class="fq-btn"><span data-icon="save" aria-hidden="true"></span> Lưu</button>
+                </div>
+                <div class="fq-inline fq-worker-controls">
+                    <button id="fq-start" class="fq-btn fq-btn-success"><span aria-hidden="true">▶</span> Chạy hàng chờ</button>
+                    <button id="fq-pause" class="fq-btn fq-btn-warn"><span aria-hidden="true">⏸</span> Tạm dừng</button>
+                    <span class="fq-hint" style="margin:0">Sau khi restart server, hàng chờ luôn đứng im cho tới khi bấm <span aria-hidden="true">▶</span> (chống tiêu quota ngoài ý muốn).</span>
+                </div>
+                <p id="fq-setting-msg" class="fq-msg" hidden></p>
+            </div>
+
+            <div class="fq-card">
+                <h2 class="fq-card-title"><span data-icon="clipboard-list" aria-hidden="true"></span> Hàng chờ Flow <span class="fq-count" id="fq-count">0</span></h2>
+                <div id="fq-jobs" class="fq-jobs">
+                    <p class="fq-empty" id="fq-empty">Chưa có job nào. Tạo job đầu tiên ở form bên trái.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/studio/icons.js"></script>
+    <script src="/studio/flow-queue.js"></script>
+</body>
+</html>

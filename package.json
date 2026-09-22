@@ -16,6 +16,8 @@
     "cors": "^2.8.5",
     "docx": "^9.7.1",
     "express": "^4.19.2",
+    "fflate": "^0.8.3",
+    "playwright-core": "^1.63.0",
     "puppeteer-core": "^22.0.0",
     "socket.io": "^4.7.5"
   }

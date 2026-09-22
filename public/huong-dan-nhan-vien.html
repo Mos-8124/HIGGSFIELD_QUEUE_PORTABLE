@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Tay Hướng Dẫn Sản Xuất Video AI — Dành Cho Nhân Viên</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --primary-border: #bfdbfe;
+            --success: #059669;
+            --success-soft: #ecfdf5;
+            --success-border: #a7f3d0;
+            --warning: #d97706;
+            --warning-soft: #fffbeb;
+            --warning-border: #fde68a;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --text-muted: #64748b;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border-card: #e2e8f0;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding: 30px 15px 60px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* ─── Header ─── */
+        .guide-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #ffffff;
+            padding: 40px 36px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        .guide-header::after {
+            content: "";
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            background: rgba(37, 99, 235, 0.25);
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #93c5fd;
+            margin-bottom: 12px;
+        }
+        .guide-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .guide-header p {
+            font-size: 16px;
+            color: #cbd5e1;
+            max-width: 700px;
+        }
+
+        /* ─── Quick Access Card ─── */
+        .quick-access {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+        .access-info h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .access-info p {
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+        .access-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .access-link:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        /* ─── Section Styling ─── */
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 32px 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title .step-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        /* ─── Step Cards ─── */
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.2s;
+        }
+        .step-card:hover {
+            border-color: var(--primary-border);
+        }
+        .step-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .step-head h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .step-body {
+            padding-left: 44px;
+            font-size: 14.5px;
+            color: var(--text-sub);
+        }
+        .step-body p { margin-bottom: 10px; }
+        .step-body ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 12px;
+        }
+        .step-body ul li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 6px;
+        }
+        .step-body ul li::before {
+            content: "•";
+            position: absolute;
+            left: 6px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* ─── Highlights & Tips ─── */
+        .tip-box {
+            background: var(--success-soft);
+            border: 1px solid var(--success-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 13.5px;
+            color: #065f46;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .tip-box .tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+        .warn-box {
+            background: var(--warning-soft);
+            border: 1px solid var(--warning-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 13.5px;
+            color: #92400e;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .warn-box .warn-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+        /* ─── Grid Comparison ─── */
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .col-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 20px;
+        }
+        .col-card.dos { border-top: 4px solid var(--success); }
+        .col-card.donts { border-top: 4px solid #ef4444; }
+        .col-card h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .col-card ul {
+            list-style: none;
+            padding: 0;
+            font-size: 13.5px;
+            color: var(--text-sub);
+        }
+        .col-card ul li {
+            margin-bottom: 8px;
+            padding-left: 18px;
+            position: relative;
+        }
+        .col-card.dos ul li::before { content: "✓"; position: absolute; left: 0; color: var(--success); font-weight: bold; }
+        .col-card.donts ul li::before { content: "✕"; position: absolute; left: 0; color: #ef4444; font-weight: bold; }
+
+        /* ─── FAQ ─── */
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 16px 20px;
+        }
+        .faq-question {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .faq-answer {
+            font-size: 14px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        /* ─── Footer ─── */
+        .guide-footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-card);
+            padding-top: 24px;
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .access-link { display: none; }
+            .guide-header { background: #1e293b; color: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header class="guide-header">
+        <div class="header-badge">✨ CẨM NANG NỘI BỘ DÀNH CHO MEDIA & CONTENT</div>
+        <h1>Hướng Dẫn Sử Dụng Hệ Thống Tạo Video AI</h1>
+        <p>Quy trình sản xuất hàng loạt video bán hàng chuẩn TikTok / Facebook Reels cực nhanh từ video đối thủ và kho clip sẵn có.</p>
+    </header>
+
+    <!-- TRUY CẬP NHANH -->
+    <div class="quick-access">
+        <div class="access-info">
+            <h3>🌐 Địa chỉ truy cập làm việc hàng ngày:</h3>
+            <p>Mở trình duyệt Google Chrome và nhập: <b>http://localhost:20140</b></p>
+        </div>
+        <a href="/byteplus/video-to-video" class="access-link" target="_blank">
+            Mở Video to Video Studio ➔
+        </a>
+    </div>
+
+    <!-- TỔNG QUAN 2 CÔNG CỤ CHÍNH -->
+    <h2 class="section-title">
+        <span class="step-icon">🧭</span> Hai công cụ chính bạn sẽ dùng
+    </h2>
+    <div class="two-col-grid">
+        <div class="col-card">
+            <h4>🎬 1. Video to Video Studio (Dùng nhiều nhất)</h4>
+            <p style="font-size: 14px; color: var(--text-sub); margin-bottom: 10px;">
+                Dùng khi bạn có <b>1 video đối thủ mẫu</b> và muốn tạo ra <b>10 video mới của mình</b> bằng cách để AI tự chọn clip trong kho, viết phụ đề và ghép giọng đọc tự động.
+            </p>
+            <span style="display:inline-block; font-size:12px; font-weight:700; color:var(--primary); background:var(--primary-soft); padding:4px 8px; border-radius:4px;">
+                Đường dẫn: /byteplus/video-to-video
+            </span>
+        </div>
+        <div class="col-card">
+            <h4>✨ 2. AI Studio (Kie Seedance)</h4>
+            <p style="font-size: 14px; color: var(--text-sub); margin-bottom: 10px;">
+                Dùng khi bạn muốn AI tự "vẽ" ra một đoạn video hoàn toàn mới bằng câu lệnh chữ (Prompt), kèm ảnh mẫu sản phẩm hoặc nhân vật KOL.
+            </p>
+            <span style="display:inline-block; font-size:12px; font-weight:700; color:var(--success); background:var(--success-soft); padding:4px 8px; border-radius:4px;">
+                Đường dẫn: /byteplus
+            </span>
+        </div>
+    </div>
+
+    <!-- QUY TRÌNH 5 BƯỚC SẢN XUẤT VIDEO-TO-VIDEO -->
+    <h2 class="section-title" style="margin-top: 40px;">
+        <span class="step-icon">🚀</span> Quy trình 5 bước sản xuất video tự động (Video to Video)
+    </h2>
+
+    <!-- BƯỚC 1 -->
+    <div class="step-card">
+        <div class="step-head">
+            <div class="step-number">1</div>
+            <h3>Nạp clip vào kho nguyên liệu (Chỉ làm khi có clip mới)</h3>
+        </div>
+        <div class="step-body">
+            <p>Kéo xuống mục <b>"Thư viện nguồn (Local Media Library)"</b> ở dưới cùng trang để nạp các đoạn video ngắn bạn đã quay sẵn:</p>
+            <ul>
+                <li>Bấm nút <b>"Tải video vào kho"</b> và chọn đúng nhóm:
+                    <br>• <b>Nguyên liệu:</b> Các cảnh quay tính năng sản phẩm, chi tiết unboxing, cách sử dụng...
+                    <br>• <b>Video đối thủ:</b> Video mẫu trên mạng để AI phân tích học hỏi.
+                    <br>• <b>Video Hook:</b> Các cảnh giật gân, độc lạ 3-4 giây đầu để giữ chân người xem.
+                </li>
+            </ul>
+            <div class="tip-box">
+                <span class="tip-icon">💡</span>
+                <div><b>Mẹo:</b> Sau khi tải lên, 5 con AI của hệ thống sẽ tự động xem từng clip và ghi chú lại các hành động. Bạn chỉ cần đợi thanh tiến độ chạy xong 100% là kho sẵn sàng!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BƯỚC 2 -->
+    <div class="step-card">
+        <div class="step-head">
+            <div class="step-number">2</div>
+            <h3>Tạo dự án mới & Tải video mẫu đối thủ</h3>
+        </div>
+        <div class="step-body">
+            <p>Ở khung <b>"Dự án & Kịch bản dựng"</b> trên cùng bên trái:</p>
+            <ul>
+                <li><b>Tên dự án:</b> Gõ tên sản phẩm hoặc chiến dịch (Ví dụ: <i>Túi nén du lịch ProVac đợt 1</i>).</li>
+                <li><b>Số lượng video (N):</b> Mặc định hệ thống đề xuất <b>10 video</b>.</li>
+                <li><b>Video đối thủ:</b> Kéo thả hoặc bấm chọn video hay nhất của đối thủ mà bạn muốn làm theo.</li>
+                <li><b>Video Hook (Tùy chọn):</b> Nếu có sẵn 1 clip mở đầu cực hút mắt, thả vào ô này; nếu không có thì bỏ trống, AI sẽ tự lấy clip trong kho làm hook.</li>
+                <li>Bấm nút <b>"Tạo project"</b>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- BƯỚC 3 -->
+    <div class="step-card">
+        <div class="step-head">
+            <div class="step-number">3</div>
+            <h3>Để AI phân tích & Sinh kịch bản tự động</h3>
+        </div>
+        <div class="step-body">
+            <p>Hệ thống sẽ tự động chuyển bạn qua các bước thông minh:</p>
+            <ul>
+                <li><b>Bước 2 (Phân tích AI):</b> AI sẽ bóc tách các đoạn mở màn, thân bài, câu kêu gọi mua hàng của video đối thủ và kiểm tra độ khớp với kho clip của bạn.</li>
+                <li><b>Bước 3 (Sinh kịch bản):</b> Bạn chọn:
+                    <br>• <b>Loại Hook:</b> Để mặc định <i>"Auto"</i> (AI tự chọn loại phù hợp nhất) hoặc chọn theo ý bạn (Ví dụ: <i>Nỗi đau, Cảnh báo, So sánh Trước/Sau</i>...).
+                    <br>• <b>Giọng đọc (Voice):</b> Chọn <i>Hoài My (Nữ truyền cảm)</i> hoặc <i>Nam Minh (Nam trầm ấm)</i>.
+                </li>
+                <li>Bấm <b>"Bắt đầu sinh kịch bản dựng"</b> và đợi khoảng 10–20 giây.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- BƯỚC 4 -->
+    <div class="step-card">
+        <div class="step-head">
+            <div class="step-number">4</div>
+            <h3>Duyệt & Chỉnh sửa kịch bản theo ý muốn (Bước quan trọng nhất)</h3>
+        </div>
+        <div class="step-body">
+            <p>Tại bảng <b>"Kịch bản dựng phim"</b>, bạn hoàn toàn có thể làm chủ nội dung trước khi tốn thời gian dựng:</p>
+            <ul>
+                <li><b>Sửa chữ phụ đề & Lời đọc:</b> Đọc qua câu chữ AI viết, nếu muốn thêm mã giảm giá, tên thương hiệu riêng hoặc chỉnh lại câu cho tự nhiên, bạn chỉ cần gõ trực tiếp vào ô.</li>
+                <li><b>Đổi góc clip:</b> Nếu không thích clip AI chọn cho đoạn đó, bạn bấm vào danh sách chọn clip để đổi sang góc quay khác trong kho.</li>
+                <li><b>Ma trận 10 kịch bản:</b> Ở bên dưới có bảng 10 biến thể kịch bản với các góc tiếp cận khác nhau để bạn xem tổng quan.</li>
+            </ul>
+            <div class="warn-box">
+                <span class="warn-icon">⚠️</span>
+                <div><b>Lưu ý quan trọng:</b> Lời thoại mỗi cảnh nên ngắn gọn (khoảng 6–8 chữ) để giọng đọc vừa vặn với độ dài phân cảnh (khoảng 3–4 giây), không nên viết câu quá dài khiến người xem bị ngợp.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BƯỚC 5 -->
+    <div class="step-card">
+        <div class="step-head">
+            <div class="step-number">5</div>
+            <h3>Bấm "Duyệt & Dựng video" và Nhận thành phẩm</h3>
+        </div>
+        <div class="step-body">
+            <p>Sau khi đã hài lòng với kịch bản:</p>
+            <ul>
+                <li>Bấm nút <b>"Duyệt Tất Cả & Dựng Video"</b>.</li>
+                <li>Hệ thống sẽ tự động ghép song song toàn bộ 10 video cùng lúc bằng giọng đọc AI và phụ đề chuẩn TikTok. Bạn chỉ cần theo dõi thanh tiến độ ở Bước 5.</li>
+                <li>Khi hoàn thành, toàn bộ video sẽ hiện ngay ở <b>cột bên phải</b> màn hình:
+                    <br>• Bấm xem thử từng video trên trình phát chính.
+                    <br>• Bấm <b>"Tải final.mp4"</b> để tải video bạn đang xem.
+                    <br>• Bấm <b>"Tải trọn bộ video (ZIP)"</b> để gom toàn bộ 10 video về máy tính chỉ với 1 click!
+                </li>
+            </ul>
+            <div class="tip-box">
+                <span class="tip-icon">🎉</span>
+                <div><b>Hoàn thành:</b> Bạn đã có 10 video chất lượng cao với 10 góc tiếp cận khác nhau để lên lịch đăng đều đặn mỗi ngày!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MẸO HAY & LỖI CẦN TRÁNH -->
+    <h2 class="section-title" style="margin-top: 40px;">
+        <span class="step-icon">⭐</span> Mẹo vàng dành cho nhân viên Content / Media
+    </h2>
+    <div class="two-col-grid">
+        <div class="col-card dos">
+            <h4>NÊN LÀM:</h4>
+            <ul>
+                <li>Nạp kho clip đa dạng: cảnh bóc hộp, cảnh test độ bền, cảnh zoom cận cảnh chi tiết.</li>
+                <li>Mỗi clip thô nên ngắn từ 3 đến 8 giây, quay nét và ánh sáng rõ ràng.</li>
+                <li>Sau khi AI sinh kịch bản, nên lướt mắt đọc lại phụ đề để chèn thêm từ ngữ đặc thù của thương hiệu.</li>
+                <li>Tải file ZIP trọn bộ về và phân loại theo ngày để đăng tải dần.</li>
+            </ul>
+        </div>
+        <div class="col-card donts">
+            <h4>KHÔNG NÊN:</h4>
+            <ul>
+                <li>Không nạp video dính sẵn logo hoặc chữ to đè của bên khác vào nhóm "Nguyên liệu".</li>
+                <li>Không viết câu thoại quá dài (tránh viết đoạn văn lê thê cho cảnh chỉ dài 3 giây).</li>
+                <li>Không tắt tab trình duyệt khi hệ thống đang trong quá trình render video.</li>
+                <li>Không sửa trực tiếp các file hệ thống trong máy nếu không có hướng dẫn.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- CÂU HỎI THƯỜNG GẶP -->
+    <h2 class="section-title" style="margin-top: 40px;">
+        <span class="step-icon">❓</span> Câu hỏi thường gặp (FAQ)
+    </h2>
+
+    <div class="faq-item">
+        <div class="faq-question">1. Sau khi dựng xong nếu muốn sửa lại 1 câu trong video thì làm sao?</div>
+        <div class="faq-answer">Rất đơn giản! Bạn chỉ cần bấm lại vào <b>Bước 4 (Duyệt kịch bản)</b> trên thanh tiến trình, sửa lại câu chữ hoặc clip bạn muốn, bấm <i>"Lưu kịch bản"</i> rồi bấm dựng lại là xong.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">2. Máy tính của tôi có cần cấu hình mạnh hay card đồ họa xịn không?</div>
+        <div class="faq-answer">Không cần! Toàn bộ việc xử lý AI và render video nặng nhọc đều do máy chủ tự động thực hiện. Bạn dùng máy văn phòng hay laptop bình thường mở Chrome lên là thao tác mượt mà.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">3. Sáng đến mở máy lên không thấy trang web chạy thì làm thế nào?</div>
+        <div class="faq-answer">Bạn chỉ cần mở thư mục dự án và nhấp đúp chuột vào file <b>`CHAY_TAT_CA_1_CLICK.bat`</b> trên màn hình. Hệ thống sẽ tự động bật mọi dịch vụ và mở trang web lên cho bạn làm việc.</div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="guide-footer">
+        <p>© 2026 GTF Video AI Studio — Tài liệu nội bộ lưu hành cho nhân viên phòng Media & Marketing.</p>
+    </footer>
+
+</div>
+
+</body>
+</html>

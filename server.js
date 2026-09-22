@@ -1,4 +1,10 @@
 process.env.TZ = process.env.TZ || 'Asia/Ho_Chi_Minh';
+process.on('unhandledRejection', (reason) => {
+    console.error('[SERVER] Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('[SERVER] Uncaught Exception:', err);
+});
 import express from 'express';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -16,6 +22,9 @@ import { video_generate, resolveToHostPath, sanitizePrompt } from './video_gener
 import { runCliTask, estimateCost, getAccountCredits, CLI_VIDEO_MODELS } from './cli_generate.js';
 // GTF Video AI Automation V2 — hệ thống thứ hai, độc lập hoàn toàn với luồng Higgsfield ở trên.
 import { createByteplusSubsystem, attachByteplusSockets } from './byteplus/index.js';
+import { createVideoStudioRouter } from './byteplus/video_studio/index.js';
+// Flowq — Google Flow Queue qua Chrome CDP 9334 (luồng copy từ Canvas-AI).
+import { createGoogleFlowRouter } from './byteplus/google_flow/index.js';
 
 const execAsync = promisify(exec);
 
@@ -206,6 +215,13 @@ const byteplus = createByteplusSubsystem({
 });
 app.use('/api/byteplus', byteplus.router);
 attachByteplusSockets(io, byteplus);
+
+// Tool độc lập "Video to Video" (GTF Video Studio, SRS) — API riêng, không đụng luồng Kie.
+app.use('/api/video-studio', createVideoStudioRouter());
+// Flowq — Google Flow qua Chrome CDP 9334 (copy từ Canvas-AI). API riêng, không đụng Kie/V1.
+app.use('/api/google-flow', createGoogleFlowRouter({
+    log: (level, msg) => broadcastLog(level, `[FlowQ] ${msg}`, 'byteplus')
+}));
 // Nối lại các job đã gửi lên provider trước khi server chết (KHÔNG gửi lại),
 // rồi nạp tiếp các task còn chờ.
 byteplus.queue.resumeRecovered();
@@ -222,11 +238,26 @@ app.get([
     '/Deeplove',
     '/byteplus'
 ], (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html')));
+app.get('/guide', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guide.html')));
+app.get(['/huong-dan', '/huong-dan-nhan-vien'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'huong-dan-nhan-vien.html')));
+// Trang tool "Video to Video" — path riêng, cùng cổng, dùng chung theme studio.
+app.get(['/byteplus/video-to-video', '/studio/video-to-video', '/video-to-video'],
+    (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'video-to-video.html')));
+// Trang "Flowq" — Google Flow Queue (CDP 9334); button ở header AI Studio trỏ tới đây.
+app.get(['/byteplus/Flowqueue', '/byteplus/flowqueue'],
+    (req, res) => res.sendFile(path.join(__dirname, 'public', 'studio', 'flow-queue.html')));
 
+// /studio: tắt cache để browser LUÔN nạp JS/CSS mới nhất (tránh dùng bản cũ trong bộ nhớ,
+// vd fix thanh tiến độ render không hiện vì trình duyệt giữ video-to-video.js cũ).
+// PHẢI đặt TRƯỚC express.static(public) bên dưới, nếu không handler public sẽ phục vụ /studio/* trước.
+app.use('/studio', express.static(path.join(__dirname, 'public', 'studio'), {
+    etag: false,
+    lastModified: false,
+    setHeaders: (res) => res.setHeader('Cache-Control', 'no-store, must-revalidate')
+}));
 // Phục vụ static files từ public, uploads và downloads
 // index:false — nếu không, express.static sẽ chiếm mất '/' bằng public/index.html.
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
-app.use('/studio', express.static(path.join(__dirname, 'public', 'studio')));
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/downloads', express.static(DOWNLOAD_DIR));
 app.use('/saved-videos', express.static(VIDEO_SAVE_DIR, {

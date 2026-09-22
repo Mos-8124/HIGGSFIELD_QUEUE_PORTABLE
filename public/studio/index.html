@@ -5,20 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GTF Video AI Studio</title>
     <link rel="stylesheet" href="/studio/studio.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/studio/theme.js"></script>
 </head>
 <body>
     <div class="app-container">
         <!-- Header Nav -->
         <header class="app-header">
             <div class="logo-area">
-                <div class="logo-badge">
-                    <span class="logo-icon">✨</span>
-                    <span class="logo-text">AI STUDIO</span>
-                </div>
+                <nav class="studio-switch" aria-label="Chọn công cụ">
+                    <a class="logo-badge is-active" href="/byteplus" title="AI Studio — tạo video bằng Kie">
+                        <span class="logo-icon" data-icon="sparkles" aria-hidden="true"></span>
+                        <span class="logo-text">AI STUDIO</span>
+                    </a>
+                    <a class="logo-badge switch-alt" href="/byteplus/video-to-video" title="Video to Video — dựng video từ thư viện + video đối thủ">
+                        <span class="logo-icon" data-icon="film" aria-hidden="true"></span>
+                        <span class="logo-text">VIDEO TO VIDEO</span>
+                    </a>
+                </nav>
                 <div class="logo-titles">
                     <h1>GTF Video AI Studio</h1>
                     <p class="subtitle">Real-Time Video AI Generation Studio</p>
@@ -26,10 +30,15 @@
             </div>
 
             <div class="header-badges">
+                <!-- Flowq — Google Flow Queue (Chrome CDP 9334) -->
+                <a class="status-pill flowq-pill" id="flowq-pill" href="/byteplus/Flowqueue" style="cursor: pointer; text-decoration: none; background: var(--overlay-violet-12); border: 1px solid var(--overlay-violet-40);" title="Mở Flowq — hàng chờ sinh video Google Flow (Veo) qua Chrome CDP 9334">
+                    <span class="status-dot" style="background: var(--color-violet);"></span>
+                    <span style="color: var(--color-indigo-light); font-weight: 600;"><span data-icon="film" aria-hidden="true"></span> FLOWQ</span>
+                </a>
                 <!-- LAN IP Share Badge -->
-                <div class="status-pill lan-pill" id="lan-pill" style="cursor: pointer; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35);" title="Nhấp để sao chép đường dẫn chia sẻ trong mạng LAN">
+                <div class="status-pill lan-pill" id="lan-pill" style="cursor: pointer; background: var(--overlay-blue-12); border: 1px solid var(--overlay-blue-35);" title="Nhấp để sao chép đường dẫn chia sẻ trong mạng LAN">
                     <span class="status-dot green"></span>
-                    <span id="lan-text" style="color: #60a5fa; font-weight: 600;">🌐 LAN: 192.168.1.25:20140 (Click để Copy)</span>
+                    <span id="lan-text" style="color: var(--color-blue-light); font-weight: 600;"><span data-icon="globe" aria-hidden="true"></span> LAN: 192.168.1.25:20140 (Click để Copy)</span>
                 </div>
 
                 <!-- Global Queue Status Badge -->
@@ -37,6 +46,12 @@
                     <span class="status-dot gray" id="queue-dot"></span>
                     <span id="queue-status-text">Hàng Chờ: IDLE</span>
                 </div>
+
+                <!-- Theme toggle (Phase 3) -->
+                <button type="button" class="status-pill theme-toggle-btn" id="theme-toggle-btn" data-theme-toggle aria-label="Chuyển nền sáng/tối" style="cursor: pointer; font: inherit; color: inherit;">
+                    <span data-icon="moon" aria-hidden="true"></span>
+                    <span>Nền</span>
+                </button>
             </div>
         </header>
 
@@ -67,7 +82,7 @@
                 <span class="stat-value text-purple" id="stat-eta">0 phút</span>
             </div>
             <div class="stat-card stat-card-credits" id="stat-card-credits" title="Số dư Credits tài khoản">
-                <span class="stat-label">🪙 Credits</span>
+                <span class="stat-label"><span data-icon="coins" aria-hidden="true"></span> Credits</span>
                 <span class="stat-value text-amber" id="stat-credits">...</span>
             </div>
         </section>
@@ -80,19 +95,19 @@
                 <div class="card control-card">
                     <div class="card-header">
                         <h2>
-                            <span class="header-icon">🎮</span> Bảng Điều Khiển Queue
+                            <span class="header-icon" data-icon="gamepad-2" aria-hidden="true"></span> Bảng Điều Khiển Queue
                         </h2>
                     </div>
                     <div class="card-body">
                         <div class="controls-group">
                             <button id="btn-start" class="btn btn-success" title="Khởi động xử lý hàng chờ">
-                                <span class="icon">▶</span> Bắt Đầu
+                                <span class="icon" aria-hidden="true">▶</span> Bắt Đầu
                             </button>
                             <button id="btn-pause" class="btn btn-warning" disabled title="Tạm dừng hàng chờ">
-                                <span class="icon">⏸</span> Tạm Dừng
+                                <span class="icon" aria-hidden="true">⏸</span> Tạm Dừng
                             </button>
                             <button id="btn-stop" class="btn btn-danger" disabled title="Dừng hàng chờ và hủy task đang chạy">
-                                <span class="icon">⏹</span> Dừng
+                                <span class="icon" aria-hidden="true">⏹</span> Dừng
                             </button>
                         </div>
                     </div>
@@ -102,13 +117,13 @@
                 <div class="card form-card">
                     <div class="tabs-header">
                         <button class="tab-btn active" id="tab-btn-single" data-tab="single-form">
-                            <span class="tab-icon">✨</span> Task Đơn Lẻ
+                            <span class="tab-icon" data-icon="sparkles" aria-hidden="true"></span> Task Đơn Lẻ
                         </button>
                         <button class="tab-btn" id="tab-btn-bulk" data-tab="bulk-tab">
-                            <span class="tab-icon">📋</span> Import Hàng Loạt
+                            <span class="tab-icon" data-icon="clipboard-list" aria-hidden="true"></span> Import Hàng Loạt
                         </button>
                         <button class="tab-btn" id="tab-btn-usage" data-tab="usage-tab">
-                            <span class="tab-icon">💰</span> Quản lý Tín dụng
+                            <span class="tab-icon" data-icon="wallet" aria-hidden="true"></span> Quản lý Tín dụng
                         </button>
                     </div>
 
@@ -117,12 +132,12 @@
                         <form id="single-form" class="tab-content active">
                             <!-- Creator Name Field -->
                             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
-                                <div class="form-group" style="margin-bottom:0">
-                                    <label for="creator">👤 Tên Người Tạo <span class="required">*</span></label>
+                                <div class="form-group mb-0">
+                                    <label for="creator"><span data-icon="user" aria-hidden="true"></span> Tên Người Tạo <span class="required">*</span></label>
                                     <input type="text" id="creator" placeholder="VD: Nguyễn Văn A, Team Marketing..." required>
                                 </div>
-                                <div class="form-group" style="margin-bottom:0">
-                                    <label for="task-name">📁 Tên Task</label>
+                                <div class="form-group mb-0">
+                                    <label for="task-name"><span data-icon="folder" aria-hidden="true"></span> Tên Task</label>
                                     <input type="text" id="task-name" placeholder="VD: Sản phẩm A - Shot 1, Quảng cáo mùa hè...">
                                 </div>
                             </div>
@@ -136,16 +151,16 @@
                                 
                                 <!-- Quick Prompt Suggestions -->
                                 <div class="quick-prompts">
-                                    <span class="quick-prompt-chip" data-prompt="Cinematic drone shot of futuristic cyberpunk Tokyo at night, raining with neon reflections, 8k resolution, photorealistic">🌃 Cyberpunk City</span>
-                                    <span class="quick-prompt-chip" data-prompt="Macro slow-motion shot of a water droplet falling on a vibrant emerald leaf, hyperdetailed, 4k">💧 Nature Macro</span>
-                                    <span class="quick-prompt-chip" data-prompt="Epic astronaut floating in deep space near a colorful nebula, cinematic lighting, masterpiece">🚀 Sci-Fi Galaxy</span>
+                                    <span class="quick-prompt-chip" data-prompt="Cinematic drone shot of futuristic cyberpunk Tokyo at night, raining with neon reflections, 8k resolution, photorealistic"><span data-icon="moon" aria-hidden="true"></span> Cyberpunk City</span>
+                                    <span class="quick-prompt-chip" data-prompt="Macro slow-motion shot of a water droplet falling on a vibrant emerald leaf, hyperdetailed, 4k"><span data-icon="droplet" aria-hidden="true"></span> Nature Macro</span>
+                                    <span class="quick-prompt-chip" data-prompt="Epic astronaut floating in deep space near a colorful nebula, cinematic lighting, masterpiece"><span data-icon="rocket" aria-hidden="true"></span> Sci-Fi Galaxy</span>
                                 </div>
                             </div>
 
                             <!-- Reference Image Section (Support Multi-file & Drag-and-Drop Reorder) -->
                             <div class="form-group">
                                 <div class="form-label-row">
-                                    <label>📷 Ảnh Tham Chiếu (Chọn 1 hoặc nhiều ảnh • Kéo thả đổi thứ tự)</label>
+                                    <label><span data-icon="camera" aria-hidden="true"></span> Ảnh Tham Chiếu (Chọn 1 hoặc nhiều ảnh • Kéo thả đổi thứ tự)</label>
                                     <span id="image-counter-badge" class="badge-count" style="display:none;">0/20 ảnh</span>
                                 </div>
                                 
@@ -153,7 +168,7 @@
                                 <div class="image-dropzone" id="image-dropzone">
                                     <input type="file" id="imageFileInput" accept="image/*" multiple class="file-input-hidden">
                                     <div class="dropzone-content" id="dropzone-content">
-                                        <span class="dropzone-icon">📷</span>
+                                        <span class="dropzone-icon" data-icon="camera" aria-hidden="true"></span>
                                         <p class="dropzone-text">+ Kéo thả hoặc <span class="browse-link">chọn ảnh từ máy (1 hoặc nhiều ảnh)</span></p>
                                         <span class="dropzone-hint">PNG, JPG, WEBP (Có thể chọn nhiều ảnh, kéo thả các thẻ để đổi thứ tự tải lên)</span>
                                     </div>
@@ -171,35 +186,35 @@
                             <!-- Reference KOL Section (Nhân Vật Ảo) -->
                             <div class="form-group" id="kol-select-group">
                                 <div class="form-label-row">
-                                    <label>👤 Nhân Vật KOL Ảo (Chọn từ Thư viện KOL)</label>
-                                    <button type="button" class="btn-xs" id="btn-add-new-kol" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 4px; padding: 2px 8px; cursor: pointer;">+ Tạo KOL Mới</button>
+                                    <label><span data-icon="user" aria-hidden="true"></span> Nhân Vật KOL Ảo (Chọn từ Thư viện KOL)</label>
+                                    <button type="button" class="btn-xs" id="btn-add-new-kol" style="background: var(--overlay-blue-20); color: var(--color-blue-light); border: 1px solid var(--overlay-blue-40); border-radius: 4px; padding: 2px 8px; cursor: pointer;">+ Tạo KOL Mới</button>
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center;">
                                     <select id="kol-select" style="flex: 1;">
                                         <option value="">-- Không chọn nhân vật KOL --</option>
                                     </select>
-                                    <div id="kol-thumb-preview" style="width: 42px; height: 42px; border-radius: 6px; border: 1px solid #334155; display: none; overflow: hidden; background: #0f172a;">
+                                    <div id="kol-thumb-preview" style="width: 42px; height: 42px; border-radius: 6px; border: 1px solid var(--border-slate); display: none; overflow: hidden; background: var(--bg-navy);">
                                         <img id="kol-thumb-img" src="" alt="KOL" style="width: 100%; height: 100%; object-fit: cover;">
                                     </div>
                                 </div>
 
                                 <!-- Inline Add New KOL Form -->
-                                <div id="new-kol-form" style="display: none; margin-top: 10px; background: rgba(15, 23, 42, 0.7); border: 1px dashed #3b82f6; border-radius: 8px; padding: 12px;">
+                                <div id="new-kol-form" style="display: none; margin-top: 10px; background: var(--overlay-navy-70); border: 1px dashed var(--accent-blue); border-radius: 8px; padding: 12px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <strong style="color: #60a5fa; font-size: 13px;">➕ Thêm Nhân Vật KOL Mới Vào Thư Viện</strong>
-                                        <button type="button" id="btn-close-new-kol" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">✕</button>
+                                        <strong style="color: var(--color-blue-light); font-size: 13px;"><span data-icon="plus" aria-hidden="true"></span> Thêm Nhân Vật KOL Mới Vào Thư Viện</strong>
+                                        <button type="button" id="btn-close-new-kol" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px;" aria-label="Đóng form thêm KOL"><span data-icon="x" aria-hidden="true"></span></button>
                                     </div>
-                                    <div class="form-group" style="margin-bottom: 8px;">
+                                    <div class="form-group mb-8">
                                         <input type="text" id="new-kol-name" placeholder="Tên nhân vật KOL (VD: Mai Anh, Hero...)" style="width: 100%; font-size: 13px;">
                                     </div>
-                                    <div class="form-group" style="margin-bottom: 8px;">
+                                    <div class="form-group mb-8">
                                         <input type="text" id="new-kol-desc" placeholder="Mô tả / phong cách (VD: Nữ 22 tuổi, áo dài trắng...)" style="width: 100%; font-size: 12px;">
                                     </div>
                                     <div class="form-group" style="margin-bottom: 10px;">
-                                        <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Ảnh đại diện nhân vật KOL:</label>
-                                        <input type="file" id="new-kol-file" accept="image/*" style="font-size: 12px; color: #cbd5e1;">
+                                        <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Ảnh đại diện nhân vật KOL:</label>
+                                        <input type="file" id="new-kol-file" accept="image/*" style="font-size: 12px; color: var(--text-tertiary);">
                                     </div>
-                                    <button type="button" class="btn btn-primary btn-sm" id="btn-save-kol" style="width: 100%;">💾 Lưu Vào Thư Viện KOL</button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="btn-save-kol" style="width: 100%;"><span data-icon="save" aria-hidden="true"></span> Lưu Vào Thư Viện KOL</button>
                                 </div>
                             </div>
 
@@ -207,7 +222,7 @@
                             <!-- Reference Video Section (Support Multi-file & Drag-and-Drop Reorder) -->
                             <div class="form-group">
                                 <div class="form-label-row">
-                                    <label>🎬 Video Tham Chiếu (Chọn 1 hoặc nhiều video • Kéo thả đổi thứ tự • Luôn gán sau ảnh)</label>
+                                    <label><span data-icon="film" aria-hidden="true"></span> Video Tham Chiếu (Chọn 1 hoặc nhiều video • Kéo thả đổi thứ tự • Luôn gán sau ảnh)</label>
                                     <span id="video-counter-badge" class="badge-count" style="display:none;">0/20 video</span>
                                 </div>
                                 
@@ -215,7 +230,7 @@
                                 <div class="image-dropzone" id="video-dropzone">
                                     <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/quicktime,video/avi,video/mkv" multiple class="file-input-hidden">
                                     <div class="dropzone-content" id="video-dropzone-content">
-                                        <span class="dropzone-icon">🎬</span>
+                                        <span class="dropzone-icon" data-icon="film" aria-hidden="true"></span>
                                         <p class="dropzone-text">+ Kéo thả hoặc <span class="browse-link">chọn video từ máy (1 hoặc nhiều video)</span></p>
                                         <span class="dropzone-hint">MP4, WEBM, MOV (Có thể kéo thả các thẻ để đổi thứ tự video tải lên)</span>
                                     </div>
@@ -292,7 +307,7 @@
                             <!-- Cost Breakdown Box (Beside / Above Submit) -->
                             <div class="cost-breakdown-card" id="cost-breakdown-card">
                                 <div class="cost-breakdown-header">
-                                    <span class="cost-breakdown-title">📊 Chi Phí Dự Tính (Kie Seedance 2.5)</span>
+                                    <span class="cost-breakdown-title"><span data-icon="bar-chart-3" aria-hidden="true"></span> Chi Phí Dự Tính (Kie Seedance 2.5)</span>
                                     <span class="cost-breakdown-badge" id="cb-status-badge">Live</span>
                                 </div>
                                 <div class="cost-breakdown-grid">
@@ -334,7 +349,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary w-full btn-lg" id="submit-btn">
-                                <span class="icon">➕</span> Thêm Vào Hàng Chờ
+                                <span class="icon" data-icon="plus" aria-hidden="true"></span> Thêm Vào Hàng Chờ
                             </button>
                         </form>
 
@@ -352,12 +367,12 @@
                             <div class="bulk-options-box">
                                 <h4>Cấu hình chung cho toàn bộ danh sách:</h4>
                                 <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                                    <div class="form-group" style="margin-bottom:0">
-                                        <label for="bulk-creator">👤 Tên Người Tạo</label>
+                                    <div class="form-group mb-0">
+                                        <label for="bulk-creator"><span data-icon="user" aria-hidden="true"></span> Tên Người Tạo</label>
                                         <input type="text" id="bulk-creator" placeholder="VD: Nguyễn Văn A, Team Marketing...">
                                     </div>
-                                    <div class="form-group" style="margin-bottom:0">
-                                        <label for="bulk-task-name">📁 Tên Task Chung</label>
+                                    <div class="form-group mb-0">
+                                        <label for="bulk-task-name"><span data-icon="folder" aria-hidden="true"></span> Tên Task Chung</label>
                                         <input type="text" id="bulk-task-name" placeholder="VD: Chiến dịch mùa hè 2026...">
                                     </div>
                                 </div>
@@ -422,7 +437,7 @@
                             <!-- Live Parser Preview -->
                             <div class="bulk-preview-box" id="bulk-preview-box" style="display: none;">
                                 <div class="preview-header">
-                                    <span>🔍 Đã nhận diện <strong id="bulk-detected-count">0</strong> task:</span>
+                                    <span><span data-icon="search" aria-hidden="true"></span> Đã nhận diện <strong id="bulk-detected-count">0</strong> task:</span>
                                 </div>
                                 <div class="preview-list" id="bulk-preview-list"></div>
                             </div>
@@ -430,53 +445,53 @@
                             
 
                             <button id="btn-bulk-import" class="btn btn-primary w-full btn-lg">
-                                <span class="icon">📥</span> Import Hàng Loạt Vào Queue
+                                <span class="icon" data-icon="download" aria-hidden="true"></span> Import Hàng Loạt Vào Queue
                             </button>
                         </div>
                         <!-- TAB USAGE -->
                         <div id="usage-tab" class="tab-content">
                             <div class="usage-summary" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                                <div class="stat-card" style="flex:1; min-width: 220px; background:#1e293b; padding:15px; border-radius:8px; border:1px solid #334155;">
-                                    <div class="stat-label" style="font-size: 12px; color: #94a3b8; display:flex; justify-content:space-between; align-items:center;">
-                                        <span>💳 Kie Real Balance</span>
-                                        <button type="button" id="btn-refresh-usage" class="btn-xs" style="cursor:pointer; background:none; border:none; color:#38bdf8; font-size:14px;" title="Cập nhật lại số dư">🔄</button>
+                                <div class="stat-card usage-stat-card">
+                                    <div class="stat-label" style="font-size: 12px; color: var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+                                        <span><span data-icon="credit-card" aria-hidden="true"></span> Kie Real Balance</span>
+                                        <button type="button" id="btn-refresh-usage" class="btn-xs" style="cursor:pointer; background:none; border:none; color:var(--accent-sky); font-size:14px;" title="Cập nhật lại số dư"><span data-icon="refresh-cw" aria-hidden="true"></span></button>
                                     </div>
-                                    <div class="stat-value" id="usage-balance" style="font-size: 24px; font-weight: bold; color: #4ade80;">-- cr</div>
-                                    <div class="stat-sub" id="usage-balance-usd" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">-- USD</div>
+                                    <div class="stat-value" id="usage-balance" style="font-size: 24px; font-weight: bold; color: var(--color-success-light);">-- cr</div>
+                                    <div class="stat-sub usage-stat-sub-note" id="usage-balance-usd">-- USD</div>
                                 </div>
-                                <div class="stat-card" style="flex:1; min-width: 220px; background:#1e293b; padding:15px; border-radius:8px; border:1px solid #334155;">
-                                    <div class="stat-label" style="font-size: 12px; color: #94a3b8;">📉 Total Actual Consumed (Kie)</div>
-                                    <div class="stat-value" id="usage-total-consumed" style="font-size: 24px; font-weight: bold; color: #f87171;">0 cr</div>
-                                    <div class="stat-sub" id="usage-total-consumed-usd" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">$0.00 USD</div>
+                                <div class="stat-card usage-stat-card">
+                                    <div class="stat-label" style="font-size: 12px; color: var(--text-secondary);"><span data-icon="trending-down" aria-hidden="true"></span> Total Actual Consumed (Kie)</div>
+                                    <div class="stat-value" id="usage-total-consumed" style="font-size: 24px; font-weight: bold; color: var(--color-danger-light);">0 cr</div>
+                                    <div class="stat-sub usage-stat-sub-note" id="usage-total-consumed-usd">$0.00 USD</div>
                                 </div>
                             </div>
-                            
+
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <h4 style="margin:0; color: #e2e8f0;">Lịch Sử Chi Phí & Tiêu Hao Tín Dụng</h4>
-                                <span style="font-size:11px; color:#94a3b8;">Actual Credits lấy trực tiếp từ Kie (Never Fabricated)</span>
+                                <h4 style="margin:0; color: var(--text-heading-soft);">Lịch Sử Chi Phí & Tiêu Hao Tín Dụng</h4>
+                                <span style="font-size:11px; color:var(--text-secondary);">Actual Credits lấy trực tiếp từ Kie (Never Fabricated)</span>
                             </div>
-                            <div class="table-container" style="max-height: 480px; overflow: auto; border: 1px solid #334155; border-radius: 6px;">
+                            <div class="table-container" style="max-height: 480px; overflow: auto; border: 1px solid var(--border-slate); border-radius: 6px;">
                                 <table class="data-table usage-table" style="width: 100%; min-width: 1150px; font-size: 12px; border-collapse: collapse;">
                                      <thead>
-                                         <tr style="background:#0f172a; text-align:left;">
-                                             <th style="padding:8px 10px;">Time</th>
-                                             <th style="padding:8px 10px;">Task Name</th>
-                                             <th style="padding:8px 10px; color:#f87171;">Actual Credits</th>
-                                             <th style="padding:8px 10px; color:#fbbf24;">Estimated Credits</th>
-                                             <th style="padding:8px 10px;">Actual USD</th>
-                                             <th style="padding:8px 10px;">Estimated USD</th>
-                                             <th style="padding:8px 10px;">Creator</th>
-                                             <th style="padding:8px 10px;">Resolution</th>
-                                             <th style="padding:8px 10px;">Output Duration</th>
-                                             <th style="padding:8px 10px;">Input Video Duration</th>
-                                             <th style="padding:8px 10px;">Model</th>
-                                             <th style="padding:8px 10px;">Task ID</th>
-                                             <th style="padding:8px 10px;">Status</th>
+                                         <tr style="background:var(--bg-navy); text-align:left;">
+                                             <th class="usage-th-pad">Time</th>
+                                             <th class="usage-th-pad">Task Name</th>
+                                             <th class="usage-th-pad" style="color:var(--color-danger-light);">Actual Credits</th>
+                                             <th class="usage-th-pad" style="color:var(--color-amber);">Estimated Credits</th>
+                                             <th class="usage-th-pad">Actual USD</th>
+                                             <th class="usage-th-pad">Estimated USD</th>
+                                             <th class="usage-th-pad">Creator</th>
+                                             <th class="usage-th-pad">Resolution</th>
+                                             <th class="usage-th-pad">Output Duration</th>
+                                             <th class="usage-th-pad">Input Video Duration</th>
+                                             <th class="usage-th-pad">Model</th>
+                                             <th class="usage-th-pad">Task ID</th>
+                                             <th class="usage-th-pad">Status</th>
                                          </tr>
                                      </thead>
                                     <tbody id="usage-table-body">
                                         <tr>
-                                            <td colspan="13" class="text-center" style="padding: 24px; color: #94a3b8; text-align: center;">Chưa có dữ liệu usage.</td>
+                                            <td colspan="13" class="text-center" style="padding: 24px; color: var(--text-secondary); text-align: center;">Chưa có dữ liệu usage.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -492,7 +507,7 @@
                 <div class="card monitor-card">
                     <div class="card-header monitor-header">
                         <div class="monitor-title">
-                            <h2><span class="header-icon">📡</span> Live Monitor & System Logs</h2>
+                            <h2><span class="header-icon" data-icon="radio" aria-hidden="true"></span> Live Monitor & System Logs</h2>
                             <span id="active-task-id" class="task-id-tag">Chưa có task</span>
                         </div>
                         <span id="active-task-badge" class="task-badge idle">Idle</span>
@@ -507,7 +522,7 @@
                                 <div class="box-header" style="flex-wrap: wrap; gap: 8px;">
                                     <div class="terminal-tabs" id="terminal-tabs">
                                         <button type="button" class="terminal-tab-btn active" id="tab-log-all" data-target="logs-container">
-                                            <span>💻</span> Toàn Bộ Hệ Thống
+                                            <span data-icon="laptop" aria-hidden="true"></span> Toàn Bộ Hệ Thống
                                         </button>
                                     </div>
                                     <div class="logs-actions">
@@ -530,14 +545,14 @@
                 <div class="card table-card">
                     <div class="card-header table-header">
                         <div class="table-title-group">
-                            <h2><span class="header-icon">📋</span> Danh Sách Task Hàng Chờ</h2>
+                            <h2><span class="header-icon" data-icon="clipboard-list" aria-hidden="true"></span> Danh Sách Task Hàng Chờ</h2>
                             <span class="badge-count" id="queue-count">0</span>
                         </div>
 
                         <!-- Filter Chips & Search -->
                         <div class="table-tools">
                             <div class="search-box">
-                                <input type="text" id="table-search" placeholder="🔍 Tìm kiếm prompt, ID...">
+                                <input type="text" id="table-search" placeholder="Tìm kiếm prompt, ID...">
                             </div>
                             <div class="filter-group">
                                 <button class="filter-chip active" data-filter="all">Tất Cả</button>
@@ -566,7 +581,7 @@
                                 <tr>
                                     <td colspan="7" class="text-center empty-msg">
                                         <div class="empty-state">
-                                            <span class="empty-icon">📭</span>
+                                            <span class="empty-icon" data-icon="inbox" aria-hidden="true"></span>
                                             <p>Chưa có task nào trong hàng chờ.</p>
                                             <small>Tạo task mới từ biểu mẫu bên trái để bắt đầu tạo video.</small>
                                         </div>
@@ -587,12 +602,13 @@
         <div class="media-modal-content" onclick="event.stopPropagation()">
             <div class="media-modal-header">
                 <span id="media-modal-title" class="media-modal-title">Xem trước file</span>
-                <button type="button" class="media-modal-close" onclick="window.closeMediaModal()">✕</button>
+                <button type="button" class="media-modal-close" onclick="window.closeMediaModal()" aria-label="Đóng xem trước"><span data-icon="x" aria-hidden="true"></span></button>
             </div>
             <div id="media-modal-body" class="media-modal-body"></div>
         </div>
     </div>
 
+    <script src="/studio/icons.js"></script>
     <script src="/studio/studio.js"></script>
 </body>
 </html>

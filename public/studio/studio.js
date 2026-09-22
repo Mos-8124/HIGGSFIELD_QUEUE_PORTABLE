@@ -1,7 +1,9 @@
 /**
  * GTF Video AI Studio - Frontend Client
  * Real-Time Socket.io & REST API UI Controller
+ * Dynamic icons supported via [data-icon] attribute (icons.js)
  */
+const renderIcon = (name) => `<span data-icon="${name}" aria-hidden="true"></span>`;
 
 // Initialize Socket.io
 const socket = io('/byteplus');
@@ -372,7 +374,7 @@ async function updateKieCostEstimate() {
             // Legacy inline estimate span (if present)
             const estSpan = document.getElementById('live-cost-estimate');
             if (estSpan) {
-                estSpan.innerHTML = `💰 Ước tính: ${q.totalCredits} cr ($${Number(q.usdEquivalent || 0).toFixed(3)})`;
+                estSpan.innerHTML = `<span data-icon="coins" aria-hidden="true"></span> Ước tính: ${q.totalCredits} cr ($${Number(q.usdEquivalent || 0).toFixed(3)})`;
             }
         }
     } catch(err) {
@@ -532,12 +534,12 @@ function updateControlButtons() {
     if (isPaused) {
         if (el.btnStart) {
             el.btnStart.disabled = true;
-            el.btnStart.innerHTML = '<span class="icon">▶</span> Bắt Đầu';
+            el.btnStart.innerHTML = '<span class="icon" data-icon="play" aria-hidden="true"></span> Bắt Đầu';
             el.btnStart.title = 'Hàng chờ đang tạm dừng';
         }
         if (el.btnPause) {
             el.btnPause.disabled = false;
-            el.btnPause.innerHTML = '<span class="icon">▶️</span> Tiếp Tục';
+            el.btnPause.innerHTML = '<span class="icon" data-icon="play" aria-hidden="true"></span> Tiếp Tục';
             el.btnPause.className = 'btn btn-primary';
             el.btnPause.title = 'Tiếp tục chạy hàng chờ';
         }
@@ -545,12 +547,12 @@ function updateControlButtons() {
     } else if (isRunning) {
         if (el.btnStart) {
             el.btnStart.disabled = true;
-            el.btnStart.innerHTML = '<span class="icon">▶</span> Bắt Đầu';
+            el.btnStart.innerHTML = '<span class="icon" data-icon="play" aria-hidden="true"></span> Bắt Đầu';
             el.btnStart.title = 'Hàng chờ đang chạy';
         }
         if (el.btnPause) {
             el.btnPause.disabled = false;
-            el.btnPause.innerHTML = '<span class="icon">⏸</span> Tạm Dừng';
+            el.btnPause.innerHTML = '<span class="icon" data-icon="pause" aria-hidden="true"></span> Tạm Dừng';
             el.btnPause.className = 'btn btn-warning';
             el.btnPause.title = 'Tạm dừng hàng chờ';
         }
@@ -558,12 +560,12 @@ function updateControlButtons() {
     } else {
         if (el.btnStart) {
             el.btnStart.disabled = false;
-            el.btnStart.innerHTML = '<span class="icon">▶</span> Bắt Đầu';
+            el.btnStart.innerHTML = '<span class="icon" data-icon="play" aria-hidden="true"></span> Bắt Đầu';
             el.btnStart.title = 'Khởi động xử lý hàng chờ';
         }
         if (el.btnPause) {
             el.btnPause.disabled = true;
-            el.btnPause.innerHTML = '<span class="icon">⏸</span> Tạm Dừng';
+            el.btnPause.innerHTML = '<span class="icon" data-icon="pause" aria-hidden="true"></span> Tạm Dừng';
             el.btnPause.className = 'btn btn-warning';
             el.btnPause.title = 'Tạm dừng hàng chờ';
         }
@@ -651,14 +653,14 @@ function _ensureMediaObserver() {
                 img.className = 'ref-thumb-img';
                 img.alt = wrap.dataset.lazyAlt || '';
                 img.style.cssText = 'width:40px;height:40px;object-fit:cover;border-radius:5px;display:block;';
-                img.onerror = () => { wrap.textContent = '🖼️'; };
+                img.onerror = () => { wrap.innerHTML = '<span data-icon="image" aria-hidden="true"></span>'; };
                 img.src = url;
                 wrap.appendChild(img);
             } else {
                 // Video: use a static poster placeholder icon by default;
                 // only create the real <video> element on hover.
                 const icon = document.createElement('span');
-                icon.textContent = '🎬';
+                icon.innerHTML = '<span data-icon="film" aria-hidden="true"></span>';
                 icon.style.cssText = 'font-size:1.4rem;cursor:pointer;';
                 wrap.appendChild(icon);
 
@@ -672,7 +674,7 @@ function _ensureMediaObserver() {
                     vid.playsInline = true;
                     vid.preload = 'metadata';
                     vid.style.cssText = 'width:40px;height:40px;object-fit:cover;border-radius:5px;display:block;cursor:pointer;';
-                    vid.onerror = () => { wrap.textContent = '🎬'; };
+                    vid.onerror = () => { wrap.innerHTML = '<span data-icon="film" aria-hidden="true"></span>'; };
                     wrap.appendChild(vid);
                     // Auto-play brief preview on hover
                     wrap.addEventListener('mouseenter', () => vid.play().catch(() => {}), { passive: true });
@@ -759,7 +761,7 @@ function renderQueueTable() {
             <tr>
                 <td colspan="7" class="text-center empty-msg">
                     <div class="empty-state">
-                        <span class="empty-icon">📭</span>
+                        <span class="empty-icon" data-icon="inbox" aria-hidden="true"></span>
                         <p>${appState.tasks.length === 0 ? 'Chưa có task nào trong hàng chờ.' : 'Không tìm thấy task phù hợp với bộ lọc.'}</p>
                         <small>Tạo task mới từ biểu mẫu bên trái để bắt đầu tạo video.</small>
                     </div>
@@ -842,9 +844,9 @@ function renderQueueTable() {
             const aliasName = ref.alias || `@Image ${i + 1}`;
             return `
                 <div class="ref-media-item is-image" onclick="window.openMediaModal('${escapeHtml(fullUrl)}', 'image', 'Ảnh Tham Chiếu (${escapeHtml(aliasName)}): ${escapeHtml(fileName)}')" title="Bấm để phóng to [${escapeHtml(aliasName)}]: ${escapeHtml(fileName)}">
-                    ${fullUrl ? buildThumbWrap(fullUrl, 'image', fileName) : '<div class="ref-thumb-wrap"><span>🖼️</span></div>'}
+                    ${fullUrl ? buildThumbWrap(fullUrl, 'image', fileName) : '<div class="ref-thumb-wrap"><span data-icon="image" aria-hidden="true"></span></div>'}
                     <div class="ref-media-info">
-                        <span class="ref-media-badge img-badge">📷 ${escapeHtml(aliasName)}</span>
+                        <span class="ref-media-badge img-badge"><span data-icon="camera" aria-hidden="true"></span> ${escapeHtml(aliasName)}</span>
                         <span class="ref-media-name">${escapeHtml(fileName)}</span>
                     </div>
                 </div>
@@ -873,9 +875,9 @@ function renderQueueTable() {
             const aliasName = ref.alias || `@Video ${i + 1}`;
             return `
                 <div class="ref-media-item is-video" onclick="window.openMediaModal('${escapeHtml(fullUrl)}', 'video', 'Video Tham Chiếu (${escapeHtml(aliasName)}): ${escapeHtml(fileName)}')" title="Bấm để xem [${escapeHtml(aliasName)}]: ${escapeHtml(fileName)}">
-                    ${fullUrl ? buildThumbWrap(fullUrl, 'video', fileName) : '<div class="ref-thumb-wrap"><span>🎬</span></div>'}
+                    ${fullUrl ? buildThumbWrap(fullUrl, 'video', fileName) : '<div class="ref-thumb-wrap"><span data-icon="film" aria-hidden="true"></span></div>'}
                     <div class="ref-media-info">
-                        <span class="ref-media-badge video-badge">🎬 ${escapeHtml(aliasName)}</span>
+                        <span class="ref-media-badge video-badge"><span data-icon="film" aria-hidden="true"></span> ${escapeHtml(aliasName)}</span>
                         <span class="ref-media-name">${escapeHtml(fileName)}</span>
                     </div>
                 </div>
@@ -893,10 +895,10 @@ function renderQueueTable() {
                 : '';
             return `
                 <div class="ref-media-item is-kol" ${clickAction} title="${kolThumb ? 'Bấm để phóng to chân dung KOL: ' + escapeHtml(kolName) : 'KOL Ảo: ' + escapeHtml(kolName)}">
-                    ${kolThumb ? buildThumbWrap(kolThumb, 'image', kolName) : '<div class="ref-thumb-wrap ref-kol-avatar"><span>👤</span></div>'}
+                    ${kolThumb ? buildThumbWrap(kolThumb, 'image', kolName) : '<div class="ref-thumb-wrap ref-kol-avatar"><span data-icon="user" aria-hidden="true"></span></div>'}
                     <div class="ref-media-info">
-                        <span class="ref-media-badge kol-badge">👤 KOL</span>
-                        <span class="ref-media-name" style="color: #c084fc;">${escapeHtml(kolName)}</span>
+                        <span class="ref-media-badge kol-badge"><span data-icon="user" aria-hidden="true"></span> KOL</span>
+                        <span class="ref-media-name" style="color: var(--color-purple-bright);">${escapeHtml(kolName)}</span>
                     </div>
                 </div>
             `;
@@ -908,40 +910,40 @@ function renderQueueTable() {
             <div class="ref-media-item is-result" onclick="window.openMediaModal('${escapeHtml(videoResultUrl)}', 'video', 'Video Kết Quả')" title="Bấm để xem video kết quả">
                 ${buildThumbWrap(videoResultUrl, 'video', 'video-result.mp4')}
                 <div class="ref-media-info">
-                    <span class="ref-media-badge result-badge">🎬 Kết Quả</span>
-                    <span class="ref-media-name" style="color: #34d399;">Xem Video</span>
+                    <span class="ref-media-badge result-badge"><span data-icon="film" aria-hidden="true"></span> Kết Quả</span>
+                    <span class="ref-media-name" style="color: var(--color-emerald-light);">Xem Video</span>
                 </div>
             </div>
         ` : '';
 
         const pendingIndex = appState.tasks.filter(t => t.status === 'pending' || t.status === 'running').findIndex(t => t.id === task.id);
         const taskEtaMins = pendingIndex >= 0 ? (pendingIndex + 1) * 30 : null;
-        const etaText = (task.status === 'pending' && taskEtaMins) ? `<br><small class="text-purple" title="Thời gian xử lý ước tính (~30 phút/video)">⏱ ~${taskEtaMins < 60 ? taskEtaMins + 'm' : Math.floor(taskEtaMins/60) + 'h' + (taskEtaMins%60 ? taskEtaMins%60 + 'm' : '')}</small>` : '';
+        const etaText = (task.status === 'pending' && taskEtaMins) ? `<br><small class="text-purple" title="Thời gian xử lý ước tính (~30 phút/video)"><span data-icon="clock" aria-hidden="true"></span> ~${taskEtaMins < 60 ? taskEtaMins + 'm' : Math.floor(taskEtaMins/60) + 'h' + (taskEtaMins%60 ? taskEtaMins%60 + 'm' : '')}</small>` : '';
 
         let timeColHtml = `<div style="color: var(--text-secondary); font-size: 0.8rem;" title="Thời gian tạo">Tạo: ${createdDate}</div>`;
         if (task.status === 'completed' && completedDate) {
-            const execBadge = task.executionTime ? `<div class="execution-time-badge" title="Thời gian render thực tế: ${task.executionTime}">⏱️ ${task.executionTime}</div>` : '';
+            const execBadge = task.executionTime ? `<div class="execution-time-badge" title="Thời gian render thực tế: ${task.executionTime}"><span data-icon="clock" aria-hidden="true"></span> ${task.executionTime}</div>` : '';
             timeColHtml = `
-                <div style="color: #10b981; font-weight: 600; font-size: 0.82rem;" title="Hoàn thành lúc ${completedDate}">✅ Xong: ${completedDate}</div>
+                <div style="color: var(--color-emerald); font-weight: 600; font-size: 0.82rem;" title="Hoàn thành lúc ${completedDate}">✅ Xong: ${completedDate}</div>
                 ${execBadge}
                 <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Tạo: ${createdDate}</div>
             `;
         } else if (task.status === 'running') {
             const startedDate = formatTime24(task.startedAt) || createdDate;
             timeColHtml = `
-                <div style="color: #f59e0b; font-weight: 600; font-size: 0.82rem;" title="Bắt đầu chạy lúc ${startedDate}">⚡ Chạy: ${startedDate}</div>
+                <div style="color: var(--color-warning); font-weight: 600; font-size: 0.82rem;" title="Bắt đầu chạy lúc ${startedDate}"><span data-icon="zap" aria-hidden="true"></span> Chạy: ${startedDate}</div>
                 <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Tạo: ${createdDate}</div>
             `;
         } else if (task.status === 'failed') {
-            const execBadge = task.executionTime ? `<div class="execution-time-badge" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);" title="Thời gian chạy trước khi lỗi: ${task.executionTime}">⏱️ ${task.executionTime}</div>` : '';
+            const execBadge = task.executionTime ? `<div class="execution-time-badge" style="background: var(--overlay-danger-15); color: var(--color-red-light); border-color: var(--overlay-danger-30);" title="Thời gian chạy trước khi lỗi: ${task.executionTime}"><span data-icon="clock" aria-hidden="true"></span> ${task.executionTime}</div>` : '';
             timeColHtml = `
-                <div style="color: #f87171; font-weight: 600; font-size: 0.82rem;">❌ Thất bại</div>
+                <div style="color: var(--color-danger-light); font-weight: 600; font-size: 0.82rem;">❌ Thất bại</div>
                 ${execBadge}
                 <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Tạo: ${createdDate}</div>
             `;
         }
 
-        const creatorHtml = task.creator ? `<div class="creator-tag" title="Người tạo: ${escapeHtml(task.creator)}">👤 ${escapeHtml(task.creator)}</div>` : '';
+        const creatorHtml = task.creator ? `<div class="creator-tag" title="Người tạo: ${escapeHtml(task.creator)}"><span data-icon="user" aria-hidden="true"></span> ${escapeHtml(task.creator)}</div>` : '';
         const isLongPrompt = task.prompt && (task.prompt.length > 90 || task.prompt.includes('\n'));
 
         // Credit cost badge for task
@@ -957,7 +959,7 @@ function renderQueueTable() {
             || (task.billing && task.billing.creditsConsumed)
             || (taskHasVid ? Number((taskRate * (taskDur + taskInDur)).toFixed(2)) : (taskRate * taskDur));
 
-        const creditBadgeHtml = `<span class="credit-mode-badge" style="display:inline-block; margin-top:4px; font-weight:600; font-size:11px; color:#fbbf24; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 6px;" title="Chi phí tiêu hao của task">🪙 ${taskCredits} cr</span>`;
+        const creditBadgeHtml = `<span class="credit-mode-badge" style="display:inline-block; margin-top:4px; font-weight:600; font-size:11px; color:var(--color-amber); background:var(--overlay-amber-15); border:1px solid var(--overlay-amber-30); border-radius:4px; padding:1px 6px;" title="Chi phí tiêu hao của task"><span data-icon="coins" aria-hidden="true"></span> ${taskCredits} cr</span>`;
 
         // Nút đổi lượt tạo cho các task pending (Karaoke style)
         let reorderButtonsHtml = '';
@@ -966,9 +968,9 @@ function renderQueueTable() {
 
         if (task.status === 'pending') {
             reorderButtonsHtml = `
-                <button type="button" class="action-btn-sm priority" onclick="window.moveTaskTop('${task.id}')" title="⭐ Cho lên đầu hàng chờ (Ưu tiên chạy ngay lượt tiếp theo)">⭐ Lên đầu</button>
-                <button type="button" class="action-btn-sm move" onclick="window.moveTaskUp('${task.id}')" title="Đẩy lên trước 1 lượt">⬆️</button>
-                <button type="button" class="action-btn-sm move" onclick="window.moveTaskDown('${task.id}')" title="Đẩy lùi sau 1 lượt">⬇️</button>
+                <button type="button" class="action-btn-sm priority" onclick="window.moveTaskTop('${task.id}')" title="⭐ Cho lên đầu hàng chờ (Ưu tiên chạy ngay lượt tiếp theo)"><span data-icon="star" aria-hidden="true"></span> Lên đầu</button>
+                <button type="button" class="action-btn-sm move" onclick="window.moveTaskUp('${task.id}')" title="Đẩy lên trước 1 lượt"><span data-icon="arrow-up" aria-hidden="true"></span></button>
+                <button type="button" class="action-btn-sm move" onclick="window.moveTaskDown('${task.id}')" title="Đẩy lùi sau 1 lượt"><span data-icon="arrow-down" aria-hidden="true"></span></button>
             `;
         }
 
@@ -997,13 +999,13 @@ function renderQueueTable() {
                 </td>
                 <td>
                     <span class="task-badge ${task.status}">${task.status.toUpperCase()}</span>
-                    ${task.status === 'failed' && task.error?.code ? `<div style="color: #f87171; font-size: 10px; font-weight: 600; margin-top: 3px;" title="${escapeHtml(task.error.message || '')}">[${escapeHtml(task.error.code)}]</div>` : ''}
+                    ${task.status === 'failed' && task.error?.code ? `<div style="color: var(--color-danger-light); font-size: 10px; font-weight: 600; margin-top: 3px;" title="${escapeHtml(task.error.message || '')}">[${escapeHtml(task.error.code)}]</div>` : ''}
                 </td>
                 <td>
-                    <small><strong style="${task.status === 'failed' ? 'color:#f87171;' : ''}">${task.progress || 0}%</strong> - ${escapeHtml(getStageLabel(task))}</small>
+                    <small><strong style="${task.status === 'failed' ? 'color:var(--color-danger-light);' : ''}">${task.progress || 0}%</strong> - ${escapeHtml(getStageLabel(task))}</small>
                     ${task.status === 'running' ? `<div class="progress-bar-bg" style="height: 4px; margin-top: 4px;"><div class="progress-bar-fill" style="width: ${task.progress || 0}%"></div></div>` : ''}
                     ${task.status === 'failed' && task.error?.message ? `
-                        <div class="task-err-detail" style="color: #fca5a5; font-size: 11px; margin-top: 3px; line-height: 1.3; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 4px; padding: 2px 5px;" title="${escapeHtml(task.error.message)}">
+                        <div class="task-err-detail" style="color: var(--color-red-light); font-size: 11px; margin-top: 3px; line-height: 1.3; background: var(--overlay-danger-10); border: 1px solid var(--overlay-danger-25); border-radius: 4px; padding: 2px 5px;" title="${escapeHtml(task.error.message)}">
                             ⚠️ ${escapeHtml(task.error.message)}
                         </div>
                     ` : ''}
@@ -1014,8 +1016,8 @@ function renderQueueTable() {
                 </td>
                 <td class="text-center" style="white-space: nowrap;">
                     ${reorderButtonsHtml}
-                    ${(task.outputWebPath || task.videoUrl || task.outputUrl) ? `<a href="${escapeHtml(task.outputWebPath || task.videoUrl || task.outputUrl)}" target="_blank" rel="noreferrer" class="action-btn-sm" style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); text-decoration: none; display: inline-block;" title="Xem video">▶️ Xem</a>` : ''}
-                    ${(task.outputWebPath || task.videoUrl || task.outputUrl) ? `<a href="${escapeHtml((task.outputWebPath || task.videoUrl || task.outputUrl) + (task.outputWebPath ? '?download=1' : ''))}" download target="_blank" class="action-btn-sm" style="background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); text-decoration: none; display: inline-block; margin-left: 2px;" title="Tải file MP4">⬇️ Tải</a>` : ''}
+                    ${(task.outputWebPath || task.videoUrl || task.outputUrl) ? `<a href="${escapeHtml(task.outputWebPath || task.videoUrl || task.outputUrl)}" target="_blank" rel="noreferrer" class="action-btn-sm" style="background-color: var(--overlay-emerald-20); color: var(--color-emerald); border: 1px solid var(--overlay-emerald-40); text-decoration: none; display: inline-block;" title="Xem video"><span data-icon="play" aria-hidden="true"></span> Xem</a>` : ''}
+                    ${(task.outputWebPath || task.videoUrl || task.outputUrl) ? `<a href="${escapeHtml((task.outputWebPath || task.videoUrl || task.outputUrl) + (task.outputWebPath ? '?download=1' : ''))}" download target="_blank" class="action-btn-sm" style="background-color: var(--overlay-blue-20); color: var(--color-blue-light); border: 1px solid var(--overlay-blue-40); text-decoration: none; display: inline-block; margin-left: 2px;" title="Tải file MP4"><span data-icon="download" aria-hidden="true"></span> Tải</a>` : ''}
                     ${(task.status === 'failed' || task.status === 'completed') ? `<button type="button" class="action-btn-sm retry" onclick="window.retryTask('${task.id}')" title="Thử lại task này">↺ Retry</button>` : ''}
                     <button type="button" class="action-btn-sm delete" onclick="window.deleteTask('${task.id}')" title="Xóa task">✕ Xóa</button>
                 </td>
@@ -2009,13 +2011,13 @@ window.openMediaModal = (url, type, title) => {
 
     if (type === 'video') {
         modalBody.innerHTML = `
-            <video src="${escapeHtml(url)}" controls autoplay playsinline style="max-width: 80vw; max-height: 75vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <video src="${escapeHtml(url)}" controls autoplay playsinline style="max-width: 80vw; max-height: 75vh; border-radius: 8px; box-shadow: 0 10px 30px var(--overlay-black-50);">
                 Trình duyệt của bạn không hỗ trợ phát video.
             </video>
         `;
     } else {
         modalBody.innerHTML = `
-            <img src="${escapeHtml(url)}" alt="Xem trước" style="max-width: 80vw; max-height: 75vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <img src="${escapeHtml(url)}" alt="Xem trước" style="max-width: 80vw; max-height: 75vh; border-radius: 8px; box-shadow: 0 10px 30px var(--overlay-black-50);">
         `;
     }
 
@@ -2199,7 +2201,7 @@ async function loadUsageSummary() {
             if (tbody) {
                 tbody.innerHTML = '';
                 if (!sum.records || sum.records.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="13" class="text-center" style="padding: 24px; color: #94a3b8; text-align: center;">Chưa có dữ liệu usage.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="13" class="text-center" style="padding: 24px; color: var(--text-secondary); text-align: center;">Chưa có dữ liệu usage.</td></tr>';
                 } else {
                     for (const r of sum.records) {
                         const tr = document.createElement('tr');
@@ -2246,28 +2248,28 @@ async function loadUsageSummary() {
                             const actU = (r.actualUsd !== null && r.actualUsd !== undefined && Number.isFinite(Number(r.actualUsd)))
                                 ? Number(r.actualUsd)
                                 : Number((actCr * 0.005).toFixed(4));
-                            actualCreditsStr = `<span style="color: #f87171; font-weight: 700;">-${actCr.toLocaleString('vi-VN')} cr</span>`;
-                            actualUsdStr = `<span style="color: #f87171; font-weight: 500;">-$${actU.toFixed(3)}</span>`;
+                            actualCreditsStr = `<span style="color: var(--color-danger-light); font-weight: 700;">-${actCr.toLocaleString('vi-VN')} cr</span>`;
+                            actualUsdStr = `<span style="color: var(--color-danger-light); font-weight: 500;">-$${actU.toFixed(3)}</span>`;
                         } else if (r.status === 'completed') {
                             // Task completed nhưng chưa có Kie billing trực tiếp -> hiển thị theo định mức tiêu hao
-                            actualCreditsStr = `<span style="color: #f87171; font-weight: 700;">-${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: #94a3b8; font-size: 10px;">(ước tính)</small>`;
-                            actualUsdStr = `<span style="color: #f87171; font-weight: 500;">-$${estUsd.toFixed(3)}</span>`;
+                            actualCreditsStr = `<span style="color: var(--color-danger-light); font-weight: 700;">-${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: var(--text-secondary); font-size: 10px;">(ước tính)</small>`;
+                            actualUsdStr = `<span style="color: var(--color-danger-light); font-weight: 500;">-$${estUsd.toFixed(3)}</span>`;
                         } else if (r.status === 'running') {
-                            actualCreditsStr = `<span style="color: #38bdf8; font-weight: 600;">~${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: #38bdf8; font-size: 10px;">(đang chạy)</small>`;
-                            actualUsdStr = `<span style="color: #38bdf8;">~$${estUsd.toFixed(3)}</span>`;
+                            actualCreditsStr = `<span style="color: var(--accent-sky); font-weight: 600;">~${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: var(--accent-sky); font-size: 10px;">(đang chạy)</small>`;
+                            actualUsdStr = `<span style="color: var(--accent-sky);">~$${estUsd.toFixed(3)}</span>`;
                         } else if (r.status === 'pending') {
-                            actualCreditsStr = `<span style="color: #fbbf24; font-weight: 500;">~${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: #fbbf24; font-size: 10px;">(dự kiến)</small>`;
-                            actualUsdStr = `<span style="color: #fbbf24;">~$${estUsd.toFixed(3)}</span>`;
+                            actualCreditsStr = `<span style="color: var(--color-amber); font-weight: 500;">~${estCredits.toLocaleString('vi-VN')} cr</span> <small style="color: var(--color-amber); font-size: 10px;">(dự kiến)</small>`;
+                            actualUsdStr = `<span style="color: var(--color-amber);">~$${estUsd.toFixed(3)}</span>`;
                         } else {
-                            actualCreditsStr = `<span style="color: #64748b;">0 cr</span> <small style="color: #64748b; font-size: 10px;">(lỗi)</small>`;
-                            actualUsdStr = `<span style="color: #64748b;">$0.000</span>`;
+                            actualCreditsStr = `<span style="color: var(--text-muted);">0 cr</span> <small style="color: var(--text-muted); font-size: 10px;">(lỗi)</small>`;
+                            actualUsdStr = `<span style="color: var(--text-muted);">$0.000</span>`;
                         }
 
-                        const estCreditsStr = `<span style="color: #fbbf24; font-weight: 600;">${estCredits.toLocaleString('vi-VN')} cr</span>`;
-                        const estUsdStr = `<span style="color: #34d399;">$${estUsd.toFixed(3)}</span>`;
+                        const estCreditsStr = `<span style="color: var(--color-amber); font-weight: 600;">${estCredits.toLocaleString('vi-VN')} cr</span>`;
+                        const estUsdStr = `<span style="color: var(--color-emerald-light);">$${estUsd.toFixed(3)}</span>`;
 
                         tr.innerHTML = `
-                            <td style="color: #94a3b8; font-size: 11px;">${timeStr}</td>
+                            <td style="color: var(--text-secondary); font-size: 11px;">${timeStr}</td>
                             <td><strong>${escapeHtml(r.taskName || '-')}</strong></td>
                             <td>${actualCreditsStr}</td>
                             <td>${estCreditsStr}</td>
@@ -2424,7 +2426,7 @@ function initKolControls() {
                 alert('Lỗi kết nối tới server: ' + err.message);
             } finally {
                 btnSaveKol.disabled = false;
-                btnSaveKol.textContent = '💾 Lưu Vào Thư Viện KOL';
+                btnSaveKol.innerHTML = '<span data-icon="save" aria-hidden="true"></span> Lưu Vào Thư Viện KOL';
             }
         });
     }

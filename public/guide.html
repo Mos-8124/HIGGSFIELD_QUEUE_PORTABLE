@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng — GTF Video AI Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #080b11;
+            --bg-surface: #0e1322;
+            --bg-card: #141a2c;
+            --bg-card-hover: #192137;
+            --bg-input: #0a0d18;
+            --border-color: #202b44;
+            --border-light: #2c3a5c;
+            --border-focus: #3b82f6;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-indigo: #6366f1;
+            --color-emerald: #10b981;
+            --color-green: #22c55e;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 40%);
+        }
+
+        /* ─── Top Navigation Bar ─── */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(8, 11, 17, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 32px;
+        }
+        .top-nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        .top-nav .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        .top-nav .logo .icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .top-nav .nav-links {
+            display: flex;
+            gap: 4px;
+            list-style: none;
+        }
+        .top-nav .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+        }
+        .top-nav .nav-links a:hover {
+            color: var(--text-primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .btn-open-studio {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff !important;
+            padding: 8px 20px !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ─── Hero Section ─── */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 32px 60px;
+            text-align: center;
+        }
+        .hero .badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--accent-blue);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 50%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            max-width: 700px;
+            margin: 0 auto 32px;
+        }
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        .hero-stat {
+            text-align: center;
+        }
+        .hero-stat .num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .hero-stat .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ─── Main Content Container ─── */
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px 80px;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 48px;
+        }
+
+        /* ─── Sidebar TOC ─── */
+        .sidebar {
+            position: sticky;
+            top: 88px;
+            height: fit-content;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .sidebar h4 {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+        .sidebar ul {
+            list-style: none;
+        }
+        .sidebar ul li a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            padding: 6px 12px;
+            border-left: 2px solid transparent;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            color: var(--accent-blue);
+            border-left-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.06);
+        }
+
+        /* ─── Article Sections ─── */
+        .article {
+            min-width: 0;
+        }
+        .section {
+            margin-bottom: 64px;
+        }
+        .section h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 .icon-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .section > .desc {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .section h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 28px 0 12px;
+            color: var(--text-primary);
+        }
+        .section p, .section li {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+        .section ul, .section ol {
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+        .section li {
+            margin-bottom: 6px;
+        }
+        .section li strong {
+            color: var(--text-primary);
+        }
+
+        /* ─── Cards ─── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        .card:hover {
+            border-color: var(--border-light);
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ─── Code Blocks ─── */
+        .code-block {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--accent-cyan);
+            overflow-x: auto;
+            margin: 12px 0 20px;
+            line-height: 1.8;
+        }
+        .code-block .comment { color: var(--text-muted); }
+        .code-block .key { color: var(--accent-purple); }
+        .code-block .val { color: var(--color-green); }
+        .code-block .cmd { color: var(--color-warning); }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.83rem;
+        }
+
+        /* ─── Tables ─── */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0 24px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        thead {
+            background: var(--bg-surface);
+        }
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(32, 43, 68, 0.5);
+            color: var(--text-secondary);
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(59, 130, 246, 0.03); }
+
+        .badge-recommend {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-emerald);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+        .badge-fast {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-warning);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+        .badge-economy {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-indigo);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        /* ─── Callout / Alert Boxes ─── */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            margin: 16px 0 20px;
+            font-size: 0.88rem;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .callout-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .callout-info {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--text-secondary);
+        }
+        .callout-warning {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--text-secondary);
+        }
+        .callout-success {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--text-secondary);
+        }
+        .callout-danger {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--text-secondary);
+        }
+
+        /* ─── Step Flow ─── */
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        .steps li {
+            counter-increment: step-counter;
+            padding: 16px 16px 16px 56px;
+            position: relative;
+            border-left: 2px solid var(--border-color);
+            margin-left: 16px;
+            margin-bottom: 4px;
+        }
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: -14px;
+            top: 16px;
+            width: 26px;
+            height: 26px;
+            background: var(--accent-blue);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .steps li:last-child {
+            border-left-color: transparent;
+        }
+
+        /* ─── Pricing Comparison Cards ─── */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .model-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .model-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+        .model-card.featured {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 24px rgba(59, 130, 246, 0.15);
+        }
+        .model-card .model-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .model-card .model-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .model-card .spec-list {
+            text-align: left;
+            list-style: none;
+            padding: 0;
+            font-size: 0.82rem;
+        }
+        .model-card .spec-list li {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(32, 43, 68, 0.4);
+            display: flex;
+            justify-content: space-between;
+        }
+        .model-card .spec-list li:last-child { border-bottom: none; }
+        .model-card .spec-list .spec-label { color: var(--text-muted); }
+        .model-card .spec-list .spec-val { color: var(--text-primary); font-weight: 600; }
+
+        /* ─── Pipeline Stage Visualization ─── */
+        .pipeline {
+            display: flex;
+            gap: 4px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .pipe-stage {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 0.78rem;
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+        }
+        .pipe-stage .pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+        }
+        .pipe-stage .name {
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .pipe-arrow {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        /* ─── Keyboard Shortcuts ─── */
+        kbd {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-primary);
+        }
+
+        /* ─── Footer ─── */
+        .guide-footer {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-stats {
+                flex-wrap: wrap;
+                gap: 24px;
+            }
+            .top-nav .nav-links {
+                display: none;
+            }
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+        /* ─── Separator ─── */
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════ TOP NAVIGATION ════════════════ -->
+<nav class="top-nav">
+    <div class="top-nav-inner">
+        <a href="/studio" class="logo">
+            <span class="icon">✨</span>
+            GTF Video AI Studio
+        </a>
+        <div class="nav-links">
+            <a href="#gioi-thieu">Giới thiệu</a>
+            <a href="#bat-dau">Bắt đầu</a>
+            <a href="#tao-video">Tạo video</a>
+            <a href="#model-ai">Model AI</a>
+            <a href="#kol">KOL</a>
+            <a href="#hang-cho">Hàng chờ</a>
+            <a href="#tin-dung">Tín dụng</a>
+            <a href="#lan">LAN</a>
+            <a href="/studio" class="btn-open-studio">Mở Studio →</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ════════════════ HERO ════════════════ -->
+<header class="hero">
+    <div class="badge">📖 Hướng Dẫn Sử Dụng v2.0</div>
+    <h1>GTF Video AI Studio</h1>
+    <p>
+        Hệ thống tự động hóa sản xuất video AI — tạo video từ prompt, ảnh và nhân vật KOL ảo,
+        xử lý song song lên đến 10 video cùng lúc, theo dõi tiến độ thời gian thực.
+    </p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="num">3</div>
+            <div class="label">Model AI Seedance</div>
+        </div>
+        <div class="hero-stat">
+            <div class="num">10</div>
+            <div class="label">Video song song tối đa</div>
+        </div>
+        <div class="hero-stat">
+            <div class="num">30s</div>
+            <div class="label">Thời lượng tối đa</div>
+        </div>
+        <div class="hero-stat">
+            <div class="num">1080p</div>
+            <div class="label">Độ phân giải cao nhất</div>
+        </div>
+    </div>
+</header>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+<div class="content">
+
+    <!-- ─── Sidebar TOC ─── -->
+    <aside class="sidebar">
+        <h4>Mục Lục</h4>
+        <ul>
+            <li><a href="#gioi-thieu">Giới thiệu hệ thống</a></li>
+            <li><a href="#bat-dau">Bắt đầu nhanh</a></li>
+            <li><a href="#giao-dien">Tổng quan giao diện</a></li>
+            <li><a href="#tao-video">Tạo video đơn lẻ</a></li>
+            <li><a href="#import">Import hàng loạt</a></li>
+            <li><a href="#model-ai">Model AI & Bảng giá</a></li>
+            <li><a href="#kol">Thư viện nhân vật KOL</a></li>
+            <li><a href="#hang-cho">Quản lý hàng chờ</a></li>
+            <li><a href="#pipeline">Quy trình xử lý</a></li>
+            <li><a href="#tin-dung">Quản lý tín dụng</a></li>
+            <li><a href="#lan">Chia sẻ mạng LAN</a></li>
+            <li><a href="#troubleshoot">Xử lý sự cố</a></li>
+            <li><a href="#phim-tat">Phím tắt & Thao tác</a></li>
+        </ul>
+    </aside>
+
+    <!-- ─── Article Body ─── -->
+    <main class="article">
+
+        <!-- ═══ 1. GIỚI THIỆU ═══ -->
+        <section id="gioi-thieu" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));">🎬</span>
+                Giới thiệu hệ thống
+            </h2>
+            <p class="desc">GTF Video AI Studio là hệ thống tự động hóa sản xuất video AI thế hệ mới, được thiết kế cho đội ngũ marketing và sáng tạo nội dung.</p>
+
+            <div class="card">
+                <div class="card-title">✨ Điểm nổi bật</div>
+                <ul>
+                    <li><strong>Không cần mở Chrome, không cần đăng nhập thủ công</strong> — Tự động hoàn toàn qua API Kie.ai.</li>
+                    <li><strong>Chạy song song lên đến 10 video cùng lúc</strong> — Hàng chờ cuốn chiếu (Rolling Concurrency), slot trống nạp ngay task mới.</li>
+                    <li><strong>3 model AI Seedance</strong> — Seedance 2.5 (chất lượng cao), 2.0 Mini (tiết kiệm nhất), 2.0 Fast (nhanh, rẻ).</li>
+                    <li><strong>Thư viện nhân vật ảo KOL</strong> — Lưu và tái sử dụng chân dung nhân vật chỉ với 1 cú nhấp.</li>
+                    <li><strong>Ảnh, video tham chiếu</strong> — Kéo thả file trực tiếp, sắp xếp thứ tự ưu tiên.</li>
+                    <li><strong>Theo dõi tiến độ thời gian thực</strong> — Socket.IO live monitor, thanh progress động, terminal logs.</li>
+                    <li><strong>Chia sẻ mạng LAN</strong> — Đồng nghiệp có thể truy cập và tạo task ngay từ máy của mình.</li>
+                </ul>
+            </div>
+
+            <div class="callout callout-info">
+                <span class="callout-icon">ℹ️</span>
+                <div>
+                    Hệ thống chạy trên máy chủ Node.js duy nhất, đồng thời phục vụ cả 
+                    <strong>GTF Video AI Studio (V2)</strong> và <strong>Higgsfield Classic (V1)</strong>.
+                    Dữ liệu giữa hai hệ thống tách biệt hoàn toàn.
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 2. BẮT ĐẦU NHANH ═══ -->
+        <section id="bat-dau" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--color-emerald), var(--accent-cyan));">🚀</span>
+                Bắt đầu nhanh
+            </h2>
+            <p class="desc">Chỉ cần 3 bước để khởi chạy hệ thống và bắt đầu tạo video AI.</p>
+
+            <h3>Bước 1: Cấu hình môi trường</h3>
+            <p>Tạo hoặc chỉnh sửa file <code>.env</code> tại thư mục gốc của dự án:</p>
+            <div class="code-block">
+<span class="comment"># Provider chính — dùng Kie.ai</span>
+<span class="key">GTF_VIDEO_PROVIDER</span>=<span class="val">kie</span>
+
+<span class="comment"># API Key từ tài khoản Kie.ai (BẮT BUỘC)</span>
+<span class="key">KIE_API_KEY</span>=<span class="val">your_kie_api_key_here</span>
+
+<span class="comment"># Cổng máy chủ (mặc định 3100)</span>
+<span class="key">HQ_PORT</span>=<span class="val">3100</span>
+
+<span class="comment"># Số video xử lý song song tối đa (mặc định 10)</span>
+<span class="key">KIE_MAX_CONCURRENCY</span>=<span class="val">3</span>
+
+<span class="comment"># Múi giờ (mặc định Asia/Ho_Chi_Minh)</span>
+<span class="key">TZ</span>=<span class="val">Asia/Ho_Chi_Minh</span>
+            </div>
+
+            <div class="callout callout-warning">
+                <span class="callout-icon">⚠️</span>
+                <div>
+                    <strong>Bảo mật API Key:</strong> Tuyệt đối không chia sẻ <code>KIE_API_KEY</code> lên GitHub hay bất kỳ nơi công khai nào.
+                    File <code>.env</code> đã được thêm vào <code>.gitignore</code>.
+                </div>
+            </div>
+
+            <h3>Bước 2: Khởi chạy máy chủ</h3>
+            <div class="code-block">
+<span class="comment"># Cài đặt thư viện (chỉ lần đầu)</span>
+<span class="cmd">npm install</span>
+
+<span class="comment"># Khởi chạy</span>
+<span class="cmd">npm start</span>
+            </div>
+
+            <h3>Bước 3: Truy cập Studio</h3>
+            <p>Mở trình duyệt tại một trong các địa chỉ sau:</p>
+            <div class="code-block">
+<span class="val">http://localhost:3100</span>         <span class="comment"># → Gateway chọn hệ thống</span>
+<span class="val">http://localhost:3100/studio</span>  <span class="comment"># → Vào thẳng Studio V2</span>
+<span class="val">http://localhost:3100/0013</span>    <span class="comment"># → Alias vào Studio V2</span>
+            </div>
+
+            <div class="callout callout-success">
+                <span class="callout-icon">✅</span>
+                <div>
+                    Nếu chưa cấu hình <code>KIE_API_KEY</code>, hệ thống sẽ tự động chạy ở chế độ <strong>MOCK</strong>
+                    — giao diện vẫn hoạt động bình thường nhưng không tạo video thật, không bị trừ tín dụng.
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 3. TỔNG QUAN GIAO DIỆN ═══ -->
+        <section id="giao-dien" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-indigo));">🖥️</span>
+                Tổng quan giao diện
+            </h2>
+            <p class="desc">Giao diện Studio được chia thành các khu vực chính, tối ưu cho quy trình sản xuất video.</p>
+
+            <div class="card">
+                <div class="card-title">📊 Thanh thống kê (Stats Bar)</div>
+                <p>Hiển thị 7 thẻ thống kê tổng quan ở đầu trang:</p>
+                <ul>
+                    <li><strong>Tổng Số Task</strong> — Tổng số lượng task trong hệ thống.</li>
+                    <li><strong>Chờ Xử Lý</strong> — Số task đang đợi đến lượt (xanh dương).</li>
+                    <li><strong>Đang Chạy</strong> — Số task đang sinh video song song (xanh ngọc).</li>
+                    <li><strong>Hoàn Thành</strong> — Số task đã render thành công (xanh lá).</li>
+                    <li><strong>Thất Bại</strong> — Số task bị lỗi (đỏ hồng).</li>
+                    <li><strong>Thời Gian Chờ ETA</strong> — Ước tính thời gian đợi (~2 phút/task).</li>
+                    <li><strong>🪙 Credits</strong> — Số dư tín dụng Kie thời gian thực (cập nhật mỗi 30 giây).</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🎛️ Bố cục 2 panel</div>
+                <ul>
+                    <li><strong>Panel Trái — Bảng điều khiển & Nhập liệu:</strong> 3 nút điều khiển (Bắt đầu / Tạm dừng / Dừng), 3 tab (Task Đơn Lẻ, Import Hàng Loạt, Quản lý Tín Dụng).</li>
+                    <li><strong>Panel Phải — Giám sát & Danh sách hàng chờ:</strong> Live monitor task đang chạy, terminal logs, bảng danh sách task có tìm kiếm, lọc, kéo thả, phân trang.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔔 Huy hiệu trạng thái Header</div>
+                <ul>
+                    <li><strong>🌐 LAN</strong> — Hiển thị IP mạng nội bộ, nhấp vào để copy link chia sẻ cho đồng nghiệp.</li>
+                    <li><strong>Hàng Chờ</strong> — Chấm trạng thái: <span style="color: var(--text-muted);">⚫ IDLE</span> &nbsp;|&nbsp; <span style="color: var(--color-green);">🟢 RUNNING</span> &nbsp;|&nbsp; <span style="color: var(--color-warning);">🟡 PAUSED</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 4. TẠO VIDEO ĐƠN LẺ ═══ -->
+        <section id="tao-video" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));">✨</span>
+                Tạo video đơn lẻ
+            </h2>
+            <p class="desc">Tạo một video AI từ prompt mô tả, ảnh/video tham chiếu và nhân vật KOL ảo.</p>
+
+            <ol class="steps">
+                <li>
+                    <strong>Điền thông tin cơ bản</strong><br>
+                    <span style="color: var(--text-secondary);">Nhập <strong>Tên Người Tạo</strong> (tự động ghi nhớ cho lần sau) và <strong>Tên Task</strong> để định danh video.</span>
+                </li>
+                <li>
+                    <strong>Viết Prompt mô tả video</strong><br>
+                    <span style="color: var(--text-secondary);">Mô tả chi tiết nội dung video muốn tạo. Hệ thống tự động làm sạch ký tự đặc biệt gây lỗi API. Có 3 chip gợi ý nhanh: 🌃 Cyberpunk City, 💧 Nature Macro, 🚀 Sci-Fi Galaxy.</span>
+                </li>
+                <li>
+                    <strong>Thêm ảnh tham chiếu (tuỳ chọn)</strong><br>
+                    <span style="color: var(--text-secondary);">Kéo thả hoặc chọn tối đa <strong>9–30 ảnh</strong> (tuỳ model). Ảnh sẽ được gắn nhãn <code>@Image 1</code>, <code>@Image 2</code>... Kéo thả để đổi thứ tự ưu tiên.</span>
+                </li>
+                <li>
+                    <strong>Chọn nhân vật KOL ảo (tuỳ chọn)</strong><br>
+                    <span style="color: var(--text-secondary);">Chọn nhân vật từ thư viện hoặc bấm <strong>"+ Tạo KOL Mới"</strong> để thêm nhanh. Ảnh chân dung KOL sẽ được sử dụng làm tham chiếu khuôn mặt.</span>
+                </li>
+                <li>
+                    <strong>Thêm video tham chiếu (tuỳ chọn)</strong><br>
+                    <span style="color: var(--text-secondary);">Kéo thả tối đa <strong>3–10 video</strong> (tuỳ model). Hệ thống tự động đọc metadata thời lượng để tính chi phí video đầu vào.</span>
+                </li>
+                <li>
+                    <strong>Cấu hình render</strong><br>
+                    <span style="color: var(--text-secondary);">Chọn <strong>Model AI</strong>, <strong>Thời lượng</strong> (4s–30s), <strong>Tỷ lệ</strong> (16:9, 9:16, 1:1), <strong>Độ phân giải</strong> (480p, 720p, 1080p). Hệ thống tự động giới hạn tuỳ chọn theo model đã chọn.</span>
+                </li>
+                <li>
+                    <strong>Xem bảng dự tính chi phí</strong><br>
+                    <span style="color: var(--text-secondary);">Bảng <strong>Cost Breakdown</strong> cập nhật trực tiếp: đơn giá/giây, chi phí video ra, chi phí video vào, tổng credits và quy đổi USD.</span>
+                </li>
+                <li>
+                    <strong>Bấm "➕ Thêm Vào Hàng Chờ"</strong><br>
+                    <span style="color: var(--text-secondary);">Task được xếp vào queue và sẽ tự động chạy khi có slot trống (cần bấm <strong>Bắt Đầu</strong> nếu queue chưa chạy).</span>
+                </li>
+            </ol>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 5. IMPORT HÀNG LOẠT ═══ -->
+        <section id="import" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--color-warning), var(--color-danger));">📋</span>
+                Import hàng loạt
+            </h2>
+            <p class="desc">Tạo nhiều video cùng lúc bằng cách dán danh sách prompt — hỗ trợ 5 định dạng tự động nhận diện.</p>
+
+            <div class="card">
+                <div class="card-title">🧠 Smart Parser — 5 định dạng được hỗ trợ</div>
+                <ol>
+                    <li><strong>JSON mảng:</strong> <code>[{"prompt": "..."}, {"prompt": "..."}]</code></li>
+                    <li><strong>Dấu phân cách:</strong> Dùng dòng <code>---</code> hoặc <code>===</code> ngăn cách giữa các prompt.</li>
+                    <li><strong>Tiền tố đánh số:</strong> <code>Prompt 1:</code>, <code>Task 1:</code>, <code>1.</code>, <code>#1:</code></li>
+                    <li><strong>Dòng trống:</strong> Phân tách prompt bằng 2 lần xuống dòng.</li>
+                    <li><strong>Văn bản tự do:</strong> Gộp tất cả thành 1 prompt duy nhất.</li>
+                </ol>
+            </div>
+
+            <h3>Cách sử dụng</h3>
+            <ol>
+                <li>Chuyển sang tab <strong>"📋 Import Hàng Loạt"</strong>.</li>
+                <li>Dán danh sách prompt vào ô văn bản lớn.</li>
+                <li>Hệ thống hiển thị preview tức thời: <em>"Nhận diện: X task"</em> và liệt kê 5 task đầu tiên.</li>
+                <li>Điền <strong>Tên Người Tạo</strong>, <strong>Tên Task Chung</strong> và chọn cấu hình (Model, Thời lượng, Tỷ lệ, Độ phân giải).</li>
+                <li>Bấm <strong>"📥 Import Hàng Loạt Vào Queue"</strong>.</li>
+            </ol>
+
+            <div class="callout callout-info">
+                <span class="callout-icon">💡</span>
+                <div>Cấu hình chung (model, thời lượng, v.v.) sẽ được áp dụng đồng nhất cho tất cả các task trong đợt import.</div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 6. MODEL AI & BẢNG GIÁ ═══ -->
+        <section id="model-ai" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));">🤖</span>
+                Model AI & Bảng giá
+            </h2>
+            <p class="desc">Hệ thống hỗ trợ 3 model Seedance của ByteDance, chạy qua nền tảng Kie.ai. Tất cả dùng chung 1 API Key.</p>
+
+            <!-- Model Comparison Cards -->
+            <div class="model-grid">
+                <!-- Seedance 2.5 -->
+                <div class="model-card featured">
+                    <div class="model-name">Seedance 2.5 <span class="badge-recommend">KHUYÊN DÙNG</span></div>
+                    <div class="model-id">bytedance/seedance-2-5</div>
+                    <ul class="spec-list">
+                        <li><span class="spec-label">Độ phân giải</span> <span class="spec-val">480p · 720p · 1080p</span></li>
+                        <li><span class="spec-label">Thời lượng</span> <span class="spec-val">4s – 30s</span></li>
+                        <li><span class="spec-label">Ảnh tối đa</span> <span class="spec-val">30 ảnh</span></li>
+                        <li><span class="spec-label">Video tối đa</span> <span class="spec-val">10 video</span></li>
+                        <li><span class="spec-label">Chất lượng</span> <span class="spec-val" style="color: var(--color-emerald);">Cao nhất</span></li>
+                    </ul>
+                </div>
+                <!-- Seedance 2.0 Mini -->
+                <div class="model-card">
+                    <div class="model-name">Seedance 2.0 Mini <span class="badge-economy">TIẾT KIỆM</span></div>
+                    <div class="model-id">bytedance/seedance-2-mini</div>
+                    <ul class="spec-list">
+                        <li><span class="spec-label">Độ phân giải</span> <span class="spec-val">480p · 720p</span></li>
+                        <li><span class="spec-label">Thời lượng</span> <span class="spec-val">4s – 15s</span></li>
+                        <li><span class="spec-label">Ảnh tối đa</span> <span class="spec-val">9 ảnh</span></li>
+                        <li><span class="spec-label">Video tối đa</span> <span class="spec-val">3 video</span></li>
+                        <li><span class="spec-label">Chi phí</span> <span class="spec-val" style="color: var(--accent-indigo);">Rẻ nhất</span></li>
+                    </ul>
+                </div>
+                <!-- Seedance 2.0 Fast -->
+                <div class="model-card">
+                    <div class="model-name">Seedance 2.0 Fast <span class="badge-fast">NHANH</span></div>
+                    <div class="model-id">bytedance/seedance-2-fast</div>
+                    <ul class="spec-list">
+                        <li><span class="spec-label">Độ phân giải</span> <span class="spec-val">480p · 720p</span></li>
+                        <li><span class="spec-label">Thời lượng</span> <span class="spec-val">4s – 15s</span></li>
+                        <li><span class="spec-label">Ảnh tối đa</span> <span class="spec-val">9 ảnh</span></li>
+                        <li><span class="spec-label">Video tối đa</span> <span class="spec-val">3 video</span></li>
+                        <li><span class="spec-label">Tốc độ</span> <span class="spec-val" style="color: var(--color-warning);">Nhanh nhất</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>💰 Bảng giá tín dụng chi tiết (Credits / Giây)</h3>
+            <p>Tỉ lệ quy đổi: <strong>1 Credit = $0.005 USD</strong></p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Độ phân giải</th>
+                            <th>Không video vào (cr/s)</th>
+                            <th>Có video vào (cr/s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="3"><strong>Seedance 2.5</strong></td>
+                            <td>480p</td>
+                            <td style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">28</td>
+                            <td style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">17</td>
+                        </tr>
+                        <tr>
+                            <td>720p</td>
+                            <td style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">63</td>
+                            <td style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">38</td>
+                        </tr>
+                        <tr>
+                            <td>1080p</td>
+                            <td style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">114</td>
+                            <td style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;">68.5</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2"><strong>Seedance 2.0 Mini</strong></td>
+                            <td>480p</td>
+                            <td style="color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace;">3.8</td>
+                            <td style="color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace;">2.4</td>
+                        </tr>
+                        <tr>
+                            <td>720p</td>
+                            <td style="color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace;">8.2</td>
+                            <td style="color: var(--accent-indigo); font-family: 'JetBrains Mono', monospace;">5.0</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2"><strong>Seedance 2.0 Fast</strong></td>
+                            <td>480p</td>
+                            <td style="color: var(--color-warning); font-family: 'JetBrains Mono', monospace;">11.7</td>
+                            <td style="color: var(--color-warning); font-family: 'JetBrains Mono', monospace;">6.8</td>
+                        </tr>
+                        <tr>
+                            <td>720p</td>
+                            <td style="color: var(--color-warning); font-family: 'JetBrains Mono', monospace;">24.8</td>
+                            <td style="color: var(--color-warning); font-family: 'JetBrains Mono', monospace;">15.0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>📐 Công thức tính chi phí</h3>
+            <div class="card">
+                <p><strong>Không có video tham chiếu đầu vào:</strong></p>
+                <div class="code-block" style="color: var(--text-primary);">
+Tổng Credits = <span class="val">Đơn giá (cr/s)</span> × <span class="val">Thời lượng video ra (s)</span>
+                </div>
+                <p><strong>Có video tham chiếu đầu vào:</strong></p>
+                <div class="code-block" style="color: var(--text-primary);">
+Tổng Credits = <span class="val">Đơn giá (cr/s)</span> × (<span class="val">Thời lượng video vào</span> + <span class="val">Thời lượng video ra</span>)
+                </div>
+                <p style="margin-top: 8px;"><strong>Quy đổi USD:</strong> <code>Tổng Credits × 0.005</code></p>
+            </div>
+
+            <div class="callout callout-info">
+                <span class="callout-icon">📌</span>
+                <div>
+                    Bảng giá trên là <strong>ước tính</strong>. Số tín dụng thực tế bị trừ sẽ do Kie.ai quyết định
+                    và được ghi nhận chính xác tại sổ cái <strong>Quản lý Tín dụng</strong>.
+                </div>
+            </div>
+
+            <h3>🔒 Giới hạn tự động theo Model (Model Gating)</h3>
+            <ul>
+                <li>Khi chọn <strong>Seedance 2.0 Mini</strong> hoặc <strong>2.0 Fast</strong>: tuỳ chọn <strong>1080p bị khoá</strong> và tự động hạ về 720p.</li>
+                <li>Khi chọn <strong>Seedance 2.0 Mini</strong> hoặc <strong>2.0 Fast</strong>: tất cả thời lượng <strong>&gt; 15 giây bị vô hiệu hoá</strong>.</li>
+                <li>Khi chọn <strong>Seedance 2.5</strong>: mở khoá đầy đủ mọi tuỳ chọn (lên đến 1080p, 30s).</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 7. THƯ VIỆN KOL ═══ -->
+        <section id="kol" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--color-warning), var(--accent-purple));">👤</span>
+                Thư viện nhân vật KOL ảo
+            </h2>
+            <p class="desc">Lưu trữ chân dung nhân vật ảo để tái sử dụng — chỉ cần 1 cú nhấp để gắn vào video.</p>
+
+            <div class="card">
+                <div class="card-title">➕ Tạo KOL mới</div>
+                <ol>
+                    <li>Tại form tạo task, nhấn nút <strong>"+ Tạo KOL Mới"</strong>.</li>
+                    <li>Nhập <strong>Tên nhân vật</strong> và <strong>Mô tả / phong cách</strong> (tuỳ chọn).</li>
+                    <li>Chọn <strong>ảnh đại diện</strong> (chân dung, khuôn mặt rõ nét cho kết quả tốt nhất).</li>
+                    <li>Bấm <strong>"Lưu"</strong> — nhân vật được thêm vào thư viện và tự động chọn ngay.</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔄 Sử dụng lại</div>
+                <p>Chọn nhân vật từ menu dropdown <strong>"Nhân Vật KOL Ảo"</strong>. Ảnh chân dung sẽ hiển thị preview ngay bên cạnh và được gửi kèm làm tham chiếu khuôn mặt cho AI.</p>
+            </div>
+
+            <div class="callout callout-success">
+                <span class="callout-icon">🛡️</span>
+                <div>
+                    <strong>Bảo toàn lịch sử:</strong> Khi tạo task, thông tin KOL được snapshot gắn chặt vào task.
+                    Việc xoá hay sửa KOL sau đó <strong>không ảnh hưởng</strong> đến các video đã tạo trước.
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 8. QUẢN LÝ HÀNG CHỜ ═══ -->
+        <section id="hang-cho" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--accent-blue), var(--color-emerald));">📊</span>
+                Quản lý hàng chờ
+            </h2>
+            <p class="desc">Hàng chờ cuốn chiếu (Rolling Concurrency) — ngay khi 1 video xong, slot trống nạp ngay video kế tiếp.</p>
+
+            <h3>🎛️ 3 nút điều khiển</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Nút</th><th>Chức năng</th><th>Hành vi chi tiết</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>▶ Bắt Đầu</strong></td>
+                            <td>Khởi chạy hàng chờ</td>
+                            <td>Kích hoạt vòng dispatch, nạp task pending vào các slot trống. Cũng dùng để Resume sau Pause.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>⏸ Tạm Dừng</strong></td>
+                            <td>Tạm ngưng nạp thêm</td>
+                            <td>Các task đang chạy <strong>tiếp tục chạy đến hết</strong>, nhưng không nạp thêm task mới. Bấm lại để tiếp tục.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>⏹ Dừng</strong></td>
+                            <td>Dừng hoàn toàn</td>
+                            <td>Huỷ tất cả task đang chạy (abort), chuyển về pending. Hàng chờ dừng hẳn.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>🔀 Sắp xếp thứ tự ưu tiên</h3>
+            <p>Có 3 cách thay đổi thứ tự chạy cho các task <strong>pending</strong>:</p>
+            <ul>
+                <li><strong>Kéo thả hàng trong bảng:</strong> Giữ biểu tượng <code>⠿</code> và kéo đến vị trí mong muốn.</li>
+                <li><strong>Nút điều phối nhanh:</strong> <code>⭐ Lên đầu</code> | <code>⬆️ Đẩy lên</code> | <code>⬇️ Đẩy xuống</code></li>
+                <li><strong>Optimistic UI:</strong> Giao diện cập nhật tức thì, sau đó đồng bộ với backend.</li>
+            </ul>
+
+            <h3>🔍 Tìm kiếm & Lọc bảng</h3>
+            <ul>
+                <li><strong>Tìm kiếm:</strong> Gõ vào ô tìm kiếm — lọc theo Prompt, Task ID, Model, Tên Người Tạo.</li>
+                <li><strong>Chip bộ lọc:</strong> Tất Cả | Chờ Xử Lý | Đang Chạy | Hoàn Thành | Thất Bại.</li>
+                <li><strong>Phân trang:</strong> 15 task / trang, hỗ trợ duyệt trang trước/sau.</li>
+            </ul>
+
+            <h3>⚡ Hành động từng task</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Nút</th><th>Mô tả</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>▶️ Xem</strong></td><td>Mở video kết quả trong tab mới trên trình duyệt.</td></tr>
+                        <tr><td><strong>⬇️ Tải</strong></td><td>Tải file MP4 về máy tính.</td></tr>
+                        <tr><td><strong>↺ Retry</strong></td><td>Chạy lại task bị lỗi hoặc đã xong muốn tạo lại.</td></tr>
+                        <tr><td><strong>✕ Xoá</strong></td><td>Xoá task khỏi hàng chờ.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout callout-warning">
+                <span class="callout-icon">💡</span>
+                <div>
+                    <strong>Retry thông minh:</strong> Nếu task đã tạo video thành công trên cloud nhưng lỗi lúc download,
+                    hệ thống chỉ retry khâu download — <strong>không bị trừ thêm tín dụng</strong>.
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 9. QUY TRÌNH XỬ LÝ ═══ -->
+        <section id="pipeline" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--accent-cyan), var(--color-emerald));">⚙️</span>
+                Quy trình xử lý (Pipeline)
+            </h2>
+            <p class="desc">Mỗi task đi qua 7 giai đoạn minh bạch, theo dõi được trên giao diện.</p>
+
+            <div class="pipeline">
+                <div class="pipe-stage"><div class="pct">2%</div><div class="name">Chuẩn bị<br>dữ liệu</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-stage"><div class="pct">10-20%</div><div class="name">Tải lên<br>tài nguyên</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-stage"><div class="pct">22%</div><div class="name">Gửi yêu cầu<br>khởi tạo</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-stage"><div class="pct">25%</div><div class="name">Xếp hàng<br>tại Kie</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-stage"><div class="pct">30-90%</div><div class="name">Đang tạo<br>video</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-stage"><div class="pct">96%</div><div class="name">Tải video<br>về máy</div></div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-stage" style="border-color: var(--color-emerald);"><div class="pct" style="color: var(--color-emerald);">100%</div><div class="name">Hoàn<br>thành ✓</div></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📺 Live Monitor</div>
+                <ul>
+                    <li><strong>Thanh tiến độ:</strong> Hiển thị phần trăm (%) và tên công đoạn hiện tại.</li>
+                    <li><strong>Terminal Logs:</strong> Console realtime qua Socket.IO — tối đa 500 dòng, phân loại màu theo mức độ (info/success/warning/error).</li>
+                    <li><strong>Auto-scroll:</strong> Bật/tắt tự động cuộn xuống dòng log mới nhất.</li>
+                </ul>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 10. QUẢN LÝ TÍN DỤNG ═══ -->
+        <section id="tin-dung" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--color-warning), var(--color-emerald));">💰</span>
+                Quản lý tín dụng
+            </h2>
+            <p class="desc">Tab "Quản lý Tín dụng" hiển thị số dư thực tế, tổng tiêu hao và sổ cái chi phí 13 cột.</p>
+
+            <div class="card">
+                <div class="card-title">🪙 Thẻ Số Dư Thực Tế</div>
+                <ul>
+                    <li><strong>Credits hiện tại:</strong> Lấy trực tiếp từ API Kie.ai.</li>
+                    <li><strong>Quy đổi USD:</strong> Credits × $0.005.</li>
+                    <li><strong>Nút 🔄 Làm Mới:</strong> Đồng bộ lại số dư tức thì (animation xoay 360°).</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📊 Sổ Cái Lịch Sử Chi Phí (13 cột)</div>
+                <p>Bảng chi tiết ghi nhận mọi task đã xử lý:</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>#</th><th>Cột</th><th>Mô tả</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td><strong>Time</strong></td><td>Thời điểm chạy task</td></tr>
+                            <tr><td>2</td><td><strong>Task Name</strong></td><td>Tên task</td></tr>
+                            <tr><td>3</td><td><strong style="color: var(--color-danger);">Actual Credits</strong></td><td>Tín dụng thực tế Kie đã trừ (màu đỏ)</td></tr>
+                            <tr><td>4</td><td><strong style="color: var(--color-warning);">Estimated Credits</strong></td><td>Ước tính trước khi chạy (màu vàng)</td></tr>
+                            <tr><td>5</td><td><strong>Actual USD</strong></td><td>Chi phí USD thực tế</td></tr>
+                            <tr><td>6</td><td><strong>Estimated USD</strong></td><td>Ước tính USD</td></tr>
+                            <tr><td>7</td><td><strong>Creator</strong></td><td>Người tạo task</td></tr>
+                            <tr><td>8</td><td><strong>Resolution</strong></td><td>Độ phân giải</td></tr>
+                            <tr><td>9</td><td><strong>Output Duration</strong></td><td>Thời lượng video ra</td></tr>
+                            <tr><td>10</td><td><strong>Input Video Duration</strong></td><td>Tổng thời lượng video tham chiếu vào</td></tr>
+                            <tr><td>11</td><td><strong>Model</strong></td><td>Model AI sử dụng</td></tr>
+                            <tr><td>12</td><td><strong>Task ID</strong></td><td>Mã định danh task</td></tr>
+                            <tr><td>13</td><td><strong>Status</strong></td><td>Trạng thái (completed / failed)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="callout callout-info">
+                <span class="callout-icon">🔍</span>
+                <div>
+                    <strong>Chênh lệch giữa Actual và Estimated là bình thường.</strong>
+                    Ước tính dựa trên bảng giá công khai, nhưng Kie.ai có thể tính phí khác do ưu đãi, làm tròn, hoặc phí xử lý phụ.
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 11. CHIA SẺ MẠNG LAN ═══ -->
+        <section id="lan" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--color-green), var(--accent-cyan));">🌐</span>
+                Chia sẻ mạng LAN
+            </h2>
+            <p class="desc">Cho phép đồng nghiệp trong cùng mạng nội bộ truy cập Studio và tạo video từ máy của họ.</p>
+
+            <div class="card">
+                <div class="card-title">📡 Cách chia sẻ</div>
+                <ol>
+                    <li>Nhìn vào huy hiệu <strong>🌐 LAN</strong> trên header của Studio.</li>
+                    <li>Nó hiển thị IP nội mạng và cổng, ví dụ: <code>🌐 LAN: 192.168.1.50:3100</code></li>
+                    <li><strong>Click vào huy hiệu</strong> — URL truy cập được tự động copy vào clipboard.</li>
+                    <li>Gửi link cho đồng nghiệp. Họ mở trình duyệt tại đó là sử dụng được ngay.</li>
+                </ol>
+            </div>
+
+            <div class="callout callout-warning">
+                <span class="callout-icon">⚠️</span>
+                <div>
+                    <strong>Yêu cầu:</strong> Các máy phải cùng mạng WiFi hoặc LAN. Tường lửa Windows có thể cần
+                    cho phép cổng <code>3100</code> (hoặc cổng bạn cấu hình) qua Inbound Rules.
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 12. XỬ LÝ SỰ CỐ ═══ -->
+        <section id="troubleshoot" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--color-danger), var(--color-warning));">🔧</span>
+                Xử lý sự cố
+            </h2>
+            <p class="desc">Các lỗi thường gặp và cách khắc phục.</p>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--color-danger);">❌ KIE_AUTH_FAILED (401)</div>
+                <p>API Key không hợp lệ hoặc đã hết hạn.</p>
+                <p><strong>Giải pháp:</strong> Kiểm tra <code>KIE_API_KEY</code> trong file <code>.env</code>. Đảm bảo không có dấu cách thừa.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--color-danger);">💳 KIE_INSUFFICIENT_CREDITS (402)</div>
+                <p>Tài khoản Kie hết tín dụng.</p>
+                <p><strong>Giải pháp:</strong> Nạp thêm credits tại <a href="https://kie.ai" target="_blank" style="color: var(--accent-blue);">kie.ai</a>.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--color-danger);">🚫 KIE_CONTENT_REJECTED (451)</div>
+                <p>Nội dung prompt hoặc ảnh vi phạm chính sách kiểm duyệt của Kie.</p>
+                <p><strong>Giải pháp:</strong> Chỉnh sửa prompt hoặc thay ảnh tham chiếu. Hệ thống <strong>không tự động retry</strong> lỗi này để tránh mất thêm credit.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--color-warning);">⏱️ KIE_RATE_LIMITED (429)</div>
+                <p>Gửi quá nhiều request trong thời gian ngắn.</p>
+                <p><strong>Giải pháp:</strong> Giảm <code>KIE_MAX_CONCURRENCY</code> trong <code>.env</code> (ví dụ từ 10 xuống 3). Hệ thống sẽ tự retry sau khoảng chờ.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--color-warning);">🔌 Mất kết nối Socket.IO</div>
+                <p>Giao diện hiển thị "Mất kết nối" trong terminal logs.</p>
+                <p><strong>Giải pháp:</strong> Kiểm tra server còn chạy không (<code>npm start</code>). Tải lại trang (F5). Nếu đổi cổng, đảm bảo truy cập đúng cổng mới.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="color: var(--color-warning);">📁 Video đã tạo lưu ở đâu?</div>
+                <p>Tất cả video kết quả được lưu tại thư mục:</p>
+                <div class="code-block">
+byteplus_outputs/<span class="val">{Tên Người Tạo}</span>/<span class="val">{Tên Task}</span>/<span class="val">{Task ID}</span>.mp4
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔄 Server restart — có bị mất task không?</div>
+                <p><strong>Không.</strong> Toàn bộ task được lưu trong <code>byteplus_queue_db.json</code>. Khi khởi động lại, hệ thống tự động phục hồi:</p>
+                <ul>
+                    <li>Task đã có <code>providerTaskId</code> → tiếp tục lắng nghe trạng thái từ Kie (không gửi lại request, không bị trừ thêm credit).</li>
+                    <li>Task pending → giữ nguyên thứ tự trong hàng chờ.</li>
+                </ul>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- ═══ 13. PHÍM TẮT ═══ -->
+        <section id="phim-tat" class="section">
+            <h2>
+                <span class="icon-circle" style="background: linear-gradient(135deg, var(--text-muted), var(--accent-blue));">⌨️</span>
+                Phím tắt & Thao tác đặc biệt
+            </h2>
+            <p class="desc">Các phím tắt và tương tác giúp thao tác nhanh hơn.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Thao tác</th><th>Thành phần</th><th>Kết quả</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Escape</kbd></td>
+                            <td>Toàn màn hình</td>
+                            <td>Đóng modal phóng to media / lightbox, tắt phát video.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Click</strong> chip prompt</td>
+                            <td>Gợi ý nhanh</td>
+                            <td>Tự động điền prompt mẫu vào textarea.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Click</strong> huy hiệu LAN</td>
+                            <td>Header</td>
+                            <td>Copy URL mạng LAN vào clipboard.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Click</strong> "Xem thêm ▾"</td>
+                            <td>Bảng task</td>
+                            <td>Mở rộng prompt dài (&gt;90 ký tự), chuyển thành "Thu gọn ▴".</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hover</strong> thumbnail video</td>
+                            <td>Bảng task</td>
+                            <td>Lazy load và tự động phát lướt video ngắn.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kéo thả</strong> file</td>
+                            <td>Dropzone ảnh/video</td>
+                            <td>Thêm file tham chiếu, sắp xếp thứ tự.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kéo thả</strong> hàng trong bảng</td>
+                            <td>Bảng task (pending)</td>
+                            <td>Đổi thứ tự ưu tiên hàng chờ.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Click</strong> thumbnail</td>
+                            <td>Bảng task</td>
+                            <td>Mở lightbox phóng to ảnh/video.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer class="guide-footer">
+    <p>GTF Video AI Studio — Hướng dẫn sử dụng v2.0</p>
+    <p style="margin-top: 4px;">Cập nhật: Tháng 9, 2026 · Powered by Kie.ai + Seedance (ByteDance)</p>
+</footer>
+
+<!-- ─── Sidebar Active Link Tracking ─── -->
+<script>
+(function () {
+    const links = document.querySelectorAll('.sidebar a');
+    const sections = Array.from(links).map(a => {
+        const id = a.getAttribute('href').slice(1);
+        return document.getElementById(id);
+    }).filter(Boolean);
+
+    function update() {
+        let current = '';
+        for (const sec of sections) {
+            if (sec.getBoundingClientRect().top <= 120) {
+                current = sec.id;
+            }
+        }
+        links.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+})();
+</script>
+
+</body>
+</html>

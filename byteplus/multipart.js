@@ -72,7 +72,7 @@ async function findBoundaryPositions(filePath, boundaryBuf) {
 }
 
 /** Middleware: chi xu ly multipart, cac content-type khac di tiep. */
-export function byteplusMultipart(uploadDir, { maxBytes = 250 * 1024 * 1024 } = {}) {
+export function byteplusMultipart(uploadDir, { maxBytes = 2048 * 1024 * 1024 } = {}) {
     return function (req, res, next) {
         const ct = req.headers['content-type'] || '';
         if (!ct.includes('multipart/form-data')) return next();
@@ -99,7 +99,8 @@ export function byteplusMultipart(uploadDir, { maxBytes = 250 * 1024 * 1024 } = 
                 aborted = true;
                 ws.destroy();
                 cleanupTmp();
-                res.status(413).json({ error: 'File qua lon (toi da 250 MB moi request).' });
+                const limitMb = Math.round(maxBytes / (1024 * 1024));
+                res.status(413).json({ error: `File qua lon (toi da ${limitMb} MB moi request).` });
                 req.destroy();
                 return;
             }

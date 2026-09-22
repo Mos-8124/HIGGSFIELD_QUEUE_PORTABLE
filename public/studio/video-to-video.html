@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video to Video — GTF Studio</title>
+    <link rel="stylesheet" href="/studio/studio.css">
+    <link rel="stylesheet" href="/studio/video-to-video.css">
+    <script src="/studio/theme.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-area">
+                <nav class="studio-switch" aria-label="Chọn công cụ">
+                    <a class="logo-badge switch-alt" href="/byteplus" title="AI Studio — tạo video bằng Kie">
+                        <span class="logo-icon" data-icon="sparkles" aria-hidden="true"></span>
+                        <span class="logo-text">AI STUDIO</span>
+                    </a>
+                    <a class="logo-badge is-active" href="/byteplus/video-to-video" title="Video to Video">
+                        <span class="logo-icon" data-icon="film" aria-hidden="true"></span>
+                        <span class="logo-text">VIDEO TO VIDEO</span>
+                    </a>
+                </nav>
+                <div class="logo-titles">
+                    <h1>Video to Video Studio</h1>
+                    <p class="subtitle">Dựng video mới từ thư viện nguồn + video tham chiếu (SRS)</p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <div class="status-pill" id="v2v-stat-pill">
+                    <span class="status-dot gray"></span>
+                    <span id="v2v-stat-text">Thư viện: — clip</span>
+                </div>
+
+                <!-- Hàng đợi dựng video dùng chung — luôn thấy, bấm để cuộn xuống danh sách -->
+                <button type="button" class="status-pill" id="v2v-queue-badge" hidden
+                        title="Hàng đợi dựng video của cả hệ thống — bấm để xem chi tiết"
+                        style="cursor:pointer;font:inherit;color:inherit;">
+                    <span class="status-dot gray" id="v2v-queue-badge-dot"></span>
+                    <span id="v2v-queue-badge-text">Hàng đợi: —</span>
+                </button>
+
+                <!-- Hướng dẫn sử dụng cho nhân viên -->
+                <a href="/huong-dan-nhan-vien.html" target="_blank" class="status-pill" title="Mở sổ tay hướng dẫn dành cho nhân viên" style="cursor: pointer; text-decoration: none; font: inherit; color: inherit;">
+                    <span aria-hidden="true">📖</span>
+                    <span>Hướng dẫn</span>
+                </a>
+
+                <!-- Theme toggle (Phase 3) -->
+                <button type="button" class="status-pill theme-toggle-btn" id="theme-toggle-btn" data-theme-toggle aria-label="Chuyển nền sáng/tối" style="cursor: pointer; font: inherit; color: inherit;">
+                    <span data-icon="moon" aria-hidden="true"></span>
+                    <span>Nền</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="v2v-main">
+            <!-- 1. QUY TRÌNH HỆ THỐNG GTF (SRS §14 FSM Guide) -->
+            <section class="v2v-card" id="v2v-pipeline-guide">
+                <div class="v2v-card-head">
+                    <h2><span data-icon="settings" aria-hidden="true"></span> Quy trình tự động hoá Video Studio (FSM Engine)</h2>
+                    <span class="v2v-hint">Quy trình sản xuất video tự động từ kho dữ liệu local &amp; AI bóc tách đối thủ</span>
+                </div>
+                <div class="v2v-guide-grid">
+                    <div class="v2v-guide-card">
+                        <div class="v2v-guide-icon" data-icon="folder" aria-hidden="true"></div>
+                        <strong>1. Thư viện nguồn</strong>
+                        <p>Quét ffprobe, lấy metadata &amp; khung hình thumbnail. Tái sử dụng cho nhiều dự án.</p>
+                    </div>
+                    <div class="v2v-guide-card">
+                        <div class="v2v-guide-icon" data-icon="search" aria-hidden="true"></div>
+                        <strong>2. Mô tả kho (AI)</strong>
+                        <p>AI phân tích theo giây lưu Media Description Index để LLM tra cứu bằng text siêu nhanh.</p>
+                    </div>
+                    <div class="v2v-guide-card">
+                        <div class="v2v-guide-icon" data-icon="target" aria-hidden="true"></div>
+                        <strong>3. Bóc tách đối thủ</strong>
+                        <p>Bóc tách Hook, Demo, CTA và nhịp cắt của video mẫu tham chiếu.</p>
+                    </div>
+                    <div class="v2v-guide-card">
+                        <div class="v2v-guide-icon" data-icon="sparkles" aria-hidden="true"></div>
+                        <strong>4. Sinh kịch bản</strong>
+                        <p>LLM matching nhu cầu đối thủ với kho clip có sẵn, sinh timeline chi tiết từng giây.</p>
+                    </div>
+                    <div class="v2v-guide-card">
+                        <div class="v2v-guide-icon" data-icon="pen-line" aria-hidden="true"></div>
+                        <strong>5. Cổng duyệt kịch bản</strong>
+                        <p>Human-in-the-loop: xem, sửa text, đổi clip, approve trước khi hệ thống ghép video.</p>
+                    </div>
+                    <div class="v2v-guide-card">
+                        <div class="v2v-guide-icon" data-icon="film" aria-hidden="true"></div>
+                        <strong>6. Dựng &amp; Duyệt cuối</strong>
+                        <p>FFmpeg cắt ghép chuẩn xác, thêm text overlay, xem video hoàn chỉnh và xuất bản.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. WORKSPACE 2 CỘT: TRÁI 35% (THAO TÁC DỰ ÁN) / PHẢI 65% (DUYỆT VIDEO THÀNH PHẨM) -->
+            <div class="v2v-workspace-layout">
+                <!-- CỘT TRÁI (35%): Dự án & Kịch bản dựng -->
+                <div class="v2v-workspace-left">
+                    <section class="v2v-card" id="v2v-reference">
+                <div class="v2v-card-head">
+                    <h2><span data-icon="target" aria-hidden="true"></span> Dự án & Kịch bản dựng (Production Timeline)</h2>
+                    <span class="v2v-hint">Upload video đối thủ và video hook (tùy chọn). AI bóc tách cấu trúc và tự động sinh kịch bản dựng từ kho video local.</span>
+                </div>
+
+                <!-- Form tạo project mới -->
+                <div class="v2v-create-row" style="flex-wrap:wrap;gap:10px;align-items:stretch;">
+                    <input type="text" id="v2v-project-name" class="v2v-input" style="width:180px;flex:none;" placeholder="Tên dự án *" />
+                    <div class="v2v-batch-count-box" style="display:flex;align-items:center;gap:8px;background:var(--overlay-soft);border:1px solid var(--overlay-line);padding:0 12px;border-radius:8px;">
+                        <label for="v2v-requested-outputs" style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">Số lượng video (N):</label>
+                        <input type="number" id="v2v-requested-outputs" class="v2v-input sm" value="10" min="1" max="20" style="width:60px;text-align:center;padding:4px;" />
+                        <span class="v2v-capacity-badge" id="v2v-capacity-badge" style="font-size:11px;color:var(--accent-sky);" title="Số video tối đa đề xuất dựa trên kho"><span data-icon="lightbulb" aria-hidden="true"></span> Đề xuất: 8-10 video</span>
+                    </div>
+                    <div class="v2v-dropzone" id="v2v-ref-dropzone" data-target="v2v-ref-file">
+                        <input type="file" id="v2v-ref-file" class="v2v-file-hidden" accept="video/*,.mp4,.mov,.webm,.mkv,.m4v,.avi" />
+                        <button type="button" class="v2v-dropzone-clear" id="v2v-ref-clear" title="Gỡ video này" aria-label="Gỡ video này"><span data-icon="x" aria-hidden="true"></span></button>
+                        <span class="v2v-dropzone-icon" data-icon="target" aria-hidden="true"></span>
+                        <span class="v2v-dropzone-label">Video đối thủ</span>
+                        <video class="v2v-dropzone-preview" id="v2v-ref-preview" controls muted playsinline preload="metadata"></video>
+                        <span class="v2v-dropzone-hint">Kéo thả hoặc bấm chọn</span>
+                        <span class="v2v-dropzone-filename" id="v2v-ref-filename"></span>
+                        <span class="v2v-dropzone-meta" id="v2v-ref-meta"></span>
+                    </div>
+                    <div class="v2v-dropzone" id="v2v-hook-dropzone" data-target="v2v-hook-file">
+                        <input type="file" id="v2v-hook-file" class="v2v-file-hidden" accept="video/*,.mp4,.mov,.webm,.mkv,.m4v,.avi" />
+                        <button type="button" class="v2v-dropzone-clear" id="v2v-hook-clear" title="Gỡ video này" aria-label="Gỡ video này"><span data-icon="x" aria-hidden="true"></span></button>
+                        <span class="v2v-dropzone-icon" data-icon="fish" aria-hidden="true"></span>
+                        <span class="v2v-dropzone-label">Video Hook</span>
+                        <video class="v2v-dropzone-preview" id="v2v-hook-preview" controls muted playsinline preload="metadata"></video>
+                        <span class="v2v-dropzone-hint">Kéo thả hoặc bấm chọn</span>
+                        <span class="v2v-dropzone-filename" id="v2v-hook-filename"></span>
+                        <span class="v2v-dropzone-meta" id="v2v-hook-meta"></span>
+                    </div>
+                    <button class="v2v-btn primary" id="v2v-create-project" style="align-self:stretch;">Tạo project</button>
+                </div>
+
+                <!-- Danh sách project đã tạo -->
+                <div class="v2v-project-selector-row">
+                    <label class="v2v-label">Chọn dự án đang làm việc:</label>
+                    <div class="v2v-custom-select" id="v2v-custom-project-select">
+                        <div class="v2v-custom-select-trigger" id="v2v-project-select-trigger">
+                            <span id="v2v-project-select-label">-- Đang tải danh sách dự án --</span>
+                            <span class="v2v-arrow">▼</span>
+                        </div>
+                        <div class="v2v-custom-select-menu" id="v2v-project-select-menu">
+                            <div class="v2v-select-search-wrap" id="v2v-project-search-wrap">
+                                <input type="text" id="v2v-project-search-input" class="v2v-select-search-input" placeholder="Tìm kiếm dự án..." autocomplete="off" />
+                                <button type="button" id="v2v-project-search-clear" class="v2v-select-search-clear" style="display:none;" title="Xóa tìm kiếm" aria-label="Xóa tìm kiếm"><span data-icon="x" aria-hidden="true"></span></button>
+                            </div>
+                            <div class="v2v-select-options-list" id="v2v-project-options-list"></div>
+                        </div>
+                    </div>
+                    <select id="v2v-project-select" class="v2v-select" style="display:none;">
+                        <option value="">-- Đang tải danh sách dự án --</option>
+                    </select>
+                </div>
+
+                <!-- Khu vực làm việc của project đang chọn -->
+                <div id="v2v-active-workspace" class="v2v-workspace" hidden>
+                    <!-- Header dự án đang chọn -->
+                    <div class="v2v-project-header">
+                        <div class="v2v-project-title-box">
+                            <h3 id="v2v-current-title" class="v2v-current-title">Tên dự án</h3>
+                            <span class="v2v-project-id" id="v2v-current-id">#id</span>
+                        </div>
+                        <div class="v2v-badge-group">
+                            <span class="v2v-status-badge" id="v2v-current-status">Trạng thái</span>
+                            <span class="v2v-ref-badge" id="v2v-current-ref">Video đối thủ: —</span>
+                        </div>
+                    </div>
+
+                    <!-- Quy trình 6 bước (Workflow Stepper) -->
+                    <div class="v2v-stepper" id="v2v-stepper">
+                        <div class="v2v-step" data-step="1"><span class="step-num">1</span> Video Input</div>
+                        <div class="v2v-step" data-step="2"><span class="step-num">2</span> Phân tích AI</div>
+                        <div class="v2v-step" data-step="3"><span class="step-num">3</span> Sinh kịch bản <small class="step-ai">(AI xử lý)</small></div>
+                        <div class="v2v-step" data-step="4"><span class="step-num">4</span> Duyệt kịch bản</div>
+                        <div class="v2v-step" data-step="5"><span class="step-num">5</span> Dựng video FFmpeg <small class="step-ai">(AI xử lý)</small></div>
+                        <div class="v2v-step" data-step="6"><span class="step-num">6</span> Duyệt & Xuất</div>
+                    </div>
+
+                    <!-- Thanh nút hành động theo FSM -->
+                    <div class="v2v-action-bar" id="v2v-action-bar">
+                        <!-- Các nút sẽ được JS hiển thị động theo trạng thái -->
+                    </div>
+
+                    <!-- Thông báo trạng thái / lỗi validation -->
+                    <div class="v2v-alert-box" id="v2v-alert-box" hidden></div>
+
+                    <!-- Panel Video Input của user (Step 1) -->
+                    <div class="v2v-subpanel" id="v2v-input-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <div class="v2v-subpanel-title-wrap" style="display:flex;align-items:center;gap:10px;">
+                                <h4><span data-icon="film" aria-hidden="true"></span> Video Input của bạn (Bước 1)</h4>
+                                <span class="v2v-step1-state-badge" id="v2v-step1-state-badge"><span aria-hidden="true">✏️</span> Có thể thay đổi</span>
+                            </div>
+                            <span class="v2v-hint" id="v2v-input-hint">Xem và thay đổi video đối thủ hoặc video hook trước khi AI phân tích ở Bước 2.</span>
+                        </div>
+
+                        <!-- Banner thông báo trạng thái chỉnh sửa / khóa -->
+                        <div class="v2v-step1-notice" id="v2v-step1-notice" style="display:none;"></div>
+
+                        <div class="v2v-input-grid">
+                            <!-- Slot 1: Video đối thủ -->
+                            <div class="v2v-input-slot" id="v2v-input-ref-slot">
+                                <div class="v2v-input-slot-title">
+                                    <span><span data-icon="target" aria-hidden="true"></span> Video đối thủ</span>
+                                    <span class="v2v-slot-state-text" id="v2v-step1-ref-state-text"></span>
+                                </div>
+                                <div class="v2v-video-container" id="v2v-input-ref-box">
+                                    <video id="v2v-input-player" controls playsinline class="v2v-player"></video>
+                                    <div class="v2v-player-placeholder" id="v2v-input-ref-empty" style="display:none;">
+                                        <span data-icon="target" aria-hidden="true"></span>
+                                        <p>Chưa có video đối thủ</p>
+                                    </div>
+                                </div>
+                                <div class="v2v-input-slot-name" id="v2v-input-ref-name"></div>
+
+                                <!-- Box thay đổi / upload video đối thủ ở Step 1 -->
+                                <div class="v2v-step1-dropzone-box" id="v2v-step1-ref-dz-box">
+                                    <div class="v2v-step1-dropzone" id="v2v-step1-ref-dropzone" data-target="v2v-step1-ref-file">
+                                        <input type="file" id="v2v-step1-ref-file" class="v2v-file-hidden" accept="video/*,.mp4,.mov,.webm,.mkv,.m4v,.avi" />
+                                        <button type="button" class="v2v-step1-clear" id="v2v-step1-ref-clear" title="Hủy chọn file mới" style="display:none;" aria-label="Hủy chọn file mới"><span data-icon="x" aria-hidden="true"></span></button>
+                                        <span class="v2v-step1-dz-icon" data-icon="refresh-cw" aria-hidden="true"></span>
+                                        <span class="v2v-step1-dz-label" id="v2v-step1-ref-dz-label">Bấm hoặc kéo thả để đổi Video đối thủ</span>
+                                        <span class="v2v-step1-dz-filename" id="v2v-step1-ref-dz-filename" style="display:none;"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Chọn lại video đối thủ từ KHO (ảnh bìa) -->
+                                <details class="v2v-kho-picker-wrap" id="v2v-step1-ref-picker-wrap">
+                                    <summary><span data-icon="folder" aria-hidden="true"></span> Hoặc chọn video đối thủ có sẵn trong kho</summary>
+                                    <div class="v2v-kho-picker" id="v2v-step1-ref-picker" data-kind="reference"></div>
+                                </details>
+                            </div>
+
+                            <!-- Slot 2: Video hook -->
+                            <div class="v2v-input-slot" id="v2v-input-hook-slot">
+                                <div class="v2v-input-slot-title">
+                                    <span><span data-icon="fish" aria-hidden="true"></span> Video Hook câu view <small style="color:var(--text-secondary);font-weight:normal;">(Tùy chọn)</small></span>
+                                    <span class="v2v-slot-state-text" id="v2v-step1-hook-state-text"></span>
+                                </div>
+                                <div class="v2v-video-container" id="v2v-input-hook-box">
+                                    <video id="v2v-input-hook-player" controls playsinline class="v2v-player"></video>
+                                    <div class="v2v-player-placeholder" id="v2v-input-hook-empty" style="display:none;">
+                                        <span data-icon="fish" aria-hidden="true"></span>
+                                        <p>Chưa có video hook (Tùy chọn)</p>
+                                    </div>
+                                </div>
+                                <div class="v2v-input-slot-name" id="v2v-input-hook-name"></div>
+
+                                <!-- Box thay đổi / upload video hook ở Step 1 -->
+                                <div class="v2v-step1-dropzone-box" id="v2v-step1-hook-dz-box">
+                                    <div class="v2v-step1-dropzone" id="v2v-step1-hook-dropzone" data-target="v2v-step1-hook-file">
+                                        <input type="file" id="v2v-step1-hook-file" class="v2v-file-hidden" accept="video/*,.mp4,.mov,.webm,.mkv,.m4v,.avi" />
+                                        <button type="button" class="v2v-step1-clear" id="v2v-step1-hook-clear" title="Hủy chọn file mới" style="display:none;" aria-label="Hủy chọn file mới"><span data-icon="x" aria-hidden="true"></span></button>
+                                        <span class="v2v-step1-dz-icon" data-icon="fish" aria-hidden="true"></span>
+                                        <span class="v2v-step1-dz-label" id="v2v-step1-hook-dz-label">Bấm hoặc kéo thả để thêm / đổi Video Hook</span>
+                                        <span class="v2v-step1-dz-filename" id="v2v-step1-hook-dz-filename" style="display:none;"></span>
+                                    </div>
+                                    <button type="button" class="v2v-btn-remove-hook" id="v2v-step1-hook-remove-btn" style="display:none;" title="Gỡ bỏ hoàn toàn video hook">
+<span data-icon="x" aria-hidden="true"></span> Gỡ bỏ Video Hook
+                                    </button>
+                                </div>
+
+                                <!-- Chọn lại video hook từ KHO (ảnh bìa) -->
+                                <details class="v2v-kho-picker-wrap" id="v2v-step1-hook-picker-wrap">
+                                    <summary><span data-icon="folder" aria-hidden="true"></span> Hoặc chọn video hook có sẵn trong kho</summary>
+                                    <p class="v2v-kho-picker-note">Không chọn gì thì AI sẽ tự lấy clip hook điểm cao nhất trong kho.</p>
+                                    <div class="v2v-kho-picker" id="v2v-step1-hook-picker" data-kind="hook"></div>
+                                </details>
+                            </div>
+                        </div>
+
+                        <!-- Actions bar cho Step 1: Lưu / Hủy thay đổi -->
+                        <div class="v2v-step1-actions-bar" id="v2v-step1-actions-bar">
+                            <button type="button" class="v2v-btn primary" id="v2v-step1-save-btn" disabled>
+                                <span data-icon="save" aria-hidden="true"></span> Lưu thay đổi Video Input
+                            </button>
+                            <button type="button" class="v2v-btn" id="v2v-step1-cancel-btn" style="display:none;">Hủy chọn file mới</button>
+                            <span class="v2v-step1-save-status" id="v2v-step1-save-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Bảng chấm điểm 7 tiêu chí video đối thủ (đợt A) -->
+                    <div class="v2v-subpanel" id="v2v-scorecard-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="star" aria-hidden="true"></span> Bảng chấm điểm video đối thủ</h4>
+                            <span class="v2v-hint">AI chấm 7 tiêu chí theo thang 1-10 để bạn biết video nào đáng học.</span>
+                        </div>
+                        <div id="v2v-scorecard"></div>
+                    </div>
+
+                    <!-- Panel Phân tích video đối thủ (SRS §6) -->
+                    <div class="v2v-subpanel" id="v2v-ref-analysis-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="bar-chart-3" aria-hidden="true"></span> Kết quả phân tích video đối thủ (SRS §6)</h4>
+                            <span class="v2v-hint">Bóc tách nhịp độ, vai trò từng phân đoạn của video tham chiếu.</span>
+                        </div>
+                        <div class="v2v-table-wrap">
+                            <table class="v2v-table" id="v2v-ref-analysis-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timeline</th>
+                                        <th>Vai trò</th>
+                                        <th>Nội dung phân tích</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="v2v-subpanel" id="v2v-hook-analysis-panel" hidden>
+                        <div class="v2v-subpanel-head"><span data-icon="fish" aria-hidden="true"></span> Kết quả phân tích Video Hook</div>
+                        <div id="v2v-hook-summary-box"></div>
+                        <div class="v2v-table-wrap">
+                            <table class="v2v-table" id="v2v-hook-analysis-table">
+                                <thead><tr><th>Timeline</th><th>Vai trò</th><th>Nội dung phân tích</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Panel Kịch bản dựng - Production Timeline (SRS §7 & §8) -->
+                    <div class="v2v-subpanel" id="v2v-timeline-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="file-text" aria-hidden="true"></span> Kịch bản dựng phim — Production Timeline (SRS §7)</h4>
+                            <!-- Cho biết bảng dưới đang là kịch bản NÀO: trước đây chỉ sửa được
+                                 kịch bản đầu nên không cần, giờ bấm card nào nạp card đó. -->
+                            <span class="v2v-timeline-variant" id="v2v-timeline-variant" aria-live="polite"></span>
+                            <div class="v2v-subpanel-actions">
+                                <span class="v2v-timeline-summary" id="v2v-timeline-summary"></span>
+                                <div class="v2v-voice-picker">
+                                    <label for="v2v-voice-select"><span data-icon="mic" aria-hidden="true"></span> Voice / Giọng đọc:</label>
+                                    <select id="v2v-voice-select" class="v2v-select sm" title="Chọn giọng thuyết minh (Edge TTS) — mặc định tiếng Việt cho kịch bản Việt Nam">
+                                        <optgroup label="Tiếng Việt (mặc định)">
+                                            <option value="vi-VN-HoaiMyNeural" selected>Hoài My (Nữ - Truyền cảm)</option>
+                                            <option value="vi-VN-NamMinhNeural">Nam Minh (Nam - Trầm ấm)</option>
+                                        </optgroup>
+                                        <optgroup label="English">
+                                            <option value="en-US-AriaNeural">Aria (US Female — Confident, Upbeat)</option>
+                                            <option value="en-US-GuyNeural">Guy (US Male — Warm, Persuasive)</option>
+                                            <option value="en-US-JennyNeural">Jenny (US Female — Friendly, Casual)</option>
+                                            <option value="en-US-EricNeural">Eric (US Male — Bold, Energetic)</option>
+                                            <option value="en-GB-SoniaNeural">Sonia (UK Female — Elegant)</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <button class="v2v-btn sm" id="v2v-add-segment-btn">+ Thêm phân đoạn</button>
+                                <button class="v2v-btn sm primary" id="v2v-save-timeline-btn"><span data-icon="save" aria-hidden="true"></span> Lưu kịch bản</button>
+                            </div>
+                        </div>
+                        <p class="v2v-hint">Bấm vào một card ở <strong>Ma Trận Kịch Bản Biến Thể</strong> bên dưới để nạp kịch bản đó lên bảng này. Bạn có thể chỉnh sửa trực tiếp clip nguồn, thời điểm cắt (giây), text overlay, và lời thoại thuyết minh AI trước khi duyệt dựng video (SRS §8).</p>
+                        <div class="v2v-table-wrap">
+                            <table class="v2v-table" id="v2v-timeline-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45px;">#</th>
+                                        <th>Clip nguồn trong kho</th>
+                                        <th class="v2v-col-85">Cắt từ (s)</th>
+                                        <th class="v2v-col-85">Đến (s)</th>
+                                        <th style="width: 75px;">Thời lượng</th>
+                                        <th>Text Overlay</th>
+                                        <th>Voice / Lời thoại AI</th>
+                                        <th style="width: 90px;">Chuyển cảnh</th>
+                                        <th style="width: 50px;">Xoá</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="v2v-timeline-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Panel Kiểm tra độ khớp kho Pre-flight Fast Gate -->
+                    <div class="v2v-subpanel" id="v2v-preflight-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="search" aria-hidden="true"></span> Đánh Giá Độ Khớp Kho (Pre-flight Fast Gate)</h4>
+                            <span class="v2v-hint">So khớp nhanh từ khóa và ngữ nghĩa video đối thủ với kho clip local.</span>
+                        </div>
+                        <div id="v2v-preflight-content"></div>
+                    </div>
+
+                    <!-- Panel Ma Trận 10 Kịch Bản & Ghi Chú Đạo Diễn (Step 4) -->
+                    <div class="v2v-subpanel" id="v2v-batch-matrix-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="clipboard-list" aria-hidden="true"></span> Ma Trận Kịch Bản Biến Thể (Batch Matrix Review)</h4>
+                            <div class="v2v-subpanel-actions">
+                                <button class="v2v-btn sm primary" id="v2v-batch-approve-btn"><span data-icon="rocket" aria-hidden="true"></span> Duyệt Tất Cả & Dựng Video</button>
+                            </div>
+                        </div>
+                        <div id="v2v-batch-summary-box" style="margin-bottom:12px;"></div>
+                        <div class="v2v-batch-matrix-grid" id="v2v-batch-matrix-grid"></div>
+                    </div>
+
+                    <!-- Panel Tiến Độ Dựng Đồng Thời 10 Luồng FFmpeg (Step 5) -->
+                    <div class="v2v-subpanel" id="v2v-batch-render-panel" hidden>
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="zap" aria-hidden="true"></span> Tiến độ dựng đồng thời 10 luồng FFmpeg</h4>
+                            <span class="v2v-hint">Render song song full tải 10 video cùng lúc trên phần cứng máy tính.</span>
+                        </div>
+
+                        <!-- Thanh tiến độ tổng thể trực quan -->
+                        <div class="v2v-render-overall-card" id="v2v-render-overall-card">
+                            <div class="v2v-render-overall-head">
+                                <span class="v2v-render-overall-title">
+                                    <span data-icon="zap" aria-hidden="true"></span> Tiến độ dựng toàn bộ đợt sản xuất
+                                </span>
+                                <span id="v2v-render-overall-pct" class="v2v-render-overall-pct">0%</span>
+                            </div>
+                            <div class="v2v-render-overall-bar">
+                                <div id="v2v-render-overall-fill" class="v2v-render-overall-fill"></div>
+                            </div>
+                            <div class="v2v-render-overall-foot">
+                                <span id="v2v-render-overall-text">Đang chuẩn bị dựng video...</span>
+                                <span id="v2v-render-overall-count">0/10 hoàn thành</span>
+                            </div>
+                        </div>
+
+                        <div class="v2v-render-stream-grid" id="v2v-render-stream-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Khi chưa chọn project nào -->
+                <div id="v2v-no-project" class="v2v-empty">
+                    Chọn một dự án ở trên hoặc tạo dự án mới để bắt đầu sản xuất video.
+                </div>
+            </section>
+        </div>
+
+        <!-- CỘT PHẢI (65%): Duyệt video thành phẩm & xuất bản -->
+        <div class="v2v-workspace-right">
+            <section class="v2v-card" id="v2v-final-review-card">
+                <div class="v2v-card-head">
+                    <h2><span data-icon="film" aria-hidden="true"></span> Video Thành Phẩm &amp; Duyệt Xuất Bản</h2>
+                    <span class="v2v-hint">Xem trước video hoàn chỉnh, tải file MP4 chất lượng cao hoặc trọn bộ biến thể.</span>
+                </div>
+
+                <div class="v2v-subpanel v2v-final-panel-always" id="v2v-final-review-panel">
+                    <!-- Trạng thái khi có video hoàn chỉnh -->
+                    <div id="v2v-final-active-box" style="display:none;">
+                        <div class="v2v-subpanel-head">
+                            <h4><span data-icon="film" aria-hidden="true"></span> Video hoàn chỉnh &amp; Duyệt xuất bản (SRS §12)</h4>
+                            <div class="v2v-export-links" id="v2v-export-links">
+                                <a id="v2v-download-mp4" class="v2v-btn sm primary" href="#" download><span data-icon="download" aria-hidden="true"></span> Tải final.mp4</a>
+                                <a id="v2v-download-all-zip" class="v2v-btn sm primary" href="#"><span data-icon="package" aria-hidden="true"></span> Tải trọn bộ video (ZIP)</a>
+                                <a id="v2v-open-storyboard" class="v2v-btn sm" href="#" target="_blank"><span data-icon="globe" aria-hidden="true"></span> Xem Storyboard HTML</a>
+                                <a id="v2v-download-timeline" class="v2v-btn sm" href="#" download><span data-icon="file" aria-hidden="true"></span> Tải Timeline JSON</a>
+                                <a id="v2v-download-manifest" class="v2v-btn sm" href="#" download><span data-icon="package" aria-hidden="true"></span> Tải Manifest JSON</a>
+                            </div>
+                        </div>
+                        <div class="v2v-video-container">
+                            <video id="v2v-video-player" controls playsinline class="v2v-player"></video>
+                        </div>
+                        <div class="v2v-subpanel-head v2v-batch-head-divider">
+                            <h4><span data-icon="package" aria-hidden="true"></span> Toàn bộ video thành phẩm trong đợt sản xuất</h4>
+                        </div>
+                        <div class="v2v-batch-gallery" id="v2v-batch-gallery"></div>
+                    </div>
+
+                    <!-- Trạng thái placeholder khi chưa có video thành phẩm -->
+                    <div id="v2v-final-placeholder" class="v2v-final-placeholder">
+                        <div class="v2v-placeholder-graphic">
+                            <span data-icon="film" class="v2v-placeholder-icon" aria-hidden="true"></span>
+                        </div>
+                        <h3 class="v2v-placeholder-title">Chưa có video thành phẩm</h3>
+                        <p class="v2v-placeholder-desc">Thực hiện quy trình tạo dự án, phân tích kịch bản và duyệt dựng ở cột bên trái. Video thành phẩm sau khi render xong sẽ hiển thị ngay tại đây để bạn kiểm tra và tải về.</p>
+                        <div class="v2v-placeholder-checklist">
+                            <div class="v2v-check-step"><span class="step-dot">1</span> Nạp video đối thủ / hook</div>
+                            <div class="v2v-check-step"><span class="step-dot">2</span> AI phân tích &amp; so khớp kho</div>
+                            <div class="v2v-check-step"><span class="step-dot">3</span> Sinh kịch bản &amp; duyệt timeline</div>
+                            <div class="v2v-check-step"><span class="step-dot">4</span> Dựng phim FFmpeg tự động</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+            <!-- 3. LOCAL MEDIA LIBRARY (SRS §3 & §4) -->
+            <div class="v2v-library-row">
+            <section class="v2v-card" id="v2v-library">
+                <div class="v2v-card-head">
+                    <h2><span data-icon="folder" aria-hidden="true"></span> Thư viện nguồn (Local Media Library &amp; Index DB)</h2>
+                    <span class="v2v-hint">Kho video local làm nguyên liệu cắt ghép. AI tự động xem từng clip và tạo chỉ mục mô tả (SRS §4).</span>
+                </div>
+                <input type="file" id="v2v-upload-input" class="v2v-file" accept="video/*,.mp4,.mov,.webm,.mkv,.m4v,.avi" multiple hidden />
+                <div class="v2v-row v2v-lib-toolbar" style="align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                    <div class="v2v-lib-toolbar-left" style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                            <div class="v2v-upload-wrap">
+                                <button class="v2v-btn primary" id="v2v-upload-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="v2v-upload-menu">Tải video vào kho</button>
+                                <!-- Panel chọn nhóm bật ra ngay dưới nút: trước đây bộ chọn nằm tít
+                                     bên thanh lọc, cách nút Tải lên quá xa nên rời rạc và dễ chọn nhầm. -->
+                                <div class="v2v-upload-menu" id="v2v-upload-menu" role="menu" hidden>
+                                    <p class="v2v-upload-menu-head">Tải lên vào nhóm nào?</p>
+                                    <button type="button" role="menuitem" class="v2v-upload-opt" data-cat="material">
+                                        <span class="v2v-upload-opt-ic" data-icon="film" aria-hidden="true"></span>
+                                        <span class="v2v-upload-opt-txt"><b>Nguyên liệu</b><small>Clip quay sẵn để dựng thân bài</small></span>
+                                    </button>
+                                    <button type="button" role="menuitem" class="v2v-upload-opt" data-cat="reference">
+                                        <span class="v2v-upload-opt-ic" data-icon="target" aria-hidden="true"></span>
+                                        <span class="v2v-upload-opt-txt"><b>Video đối thủ</b><small>Video mẫu để AI phân tích &amp; học</small></span>
+                                    </button>
+                                    <button type="button" role="menuitem" class="v2v-upload-opt" data-cat="hook">
+                                        <span class="v2v-upload-opt-ic" data-icon="fish" aria-hidden="true"></span>
+                                        <span class="v2v-upload-opt-txt"><b>Video hook</b><small>Clip 4-5s mở đầu, giữ chân người xem</small></span>
+                                    </button>
+                                </div>
+                                <!-- Giữ nguyên select ẩn làm nơi lưu nhóm đang chọn, để luồng upload không đổi. -->
+                                <select id="v2v-upload-category" hidden aria-hidden="true" tabindex="-1">
+                                    <option value="material" selected>Nguyên liệu</option>
+                                    <option value="reference">Video đối thủ</option>
+                                    <option value="hook">Video hook (4-5s)</option>
+                                </select>
+                            </div>
+                            <button class="v2v-btn" id="v2v-scan-btn" title="Quét lại thư mục kho (khi bạn tự copy file vào)">Quét lại kho</button>
+
+                            <!-- Lọc theo NHÓM: nút + panel, dời từ thanh lọc lên đây cho cùng một hàng.
+                                 <select> bên dưới vẫn là nơi lưu trạng thái thật (updateCategoryFilterOptions()
+                                 dựng lại option kèm số đếm, chip lọc nhanh cũng ghi vào đây) -> không mất tác dụng. -->
+                            <div class="v2v-filter-wrap">
+                                <button type="button" class="v2v-btn v2v-filter-btn" id="v2v-filter-cat-btn"
+                                        aria-haspopup="menu" aria-expanded="false" aria-controls="v2v-filter-cat-menu">
+                                    <span data-icon="folder" aria-hidden="true"></span>
+                                    <span class="v2v-filter-btn-label">Tất cả nhóm</span>
+                                    <span class="v2v-filter-caret" aria-hidden="true">&#9662;</span>
+                                </button>
+                                <div class="v2v-upload-menu v2v-filter-menu" id="v2v-filter-cat-menu" role="menu" hidden></div>
+                                <select id="v2v-library-category-filter" hidden aria-hidden="true" tabindex="-1">
+                                    <option value="">Tất cả nhóm</option>
+                                </select>
+                            </div>
+
+                            <!-- Lọc theo TRẠNG THÁI mô tả AI -->
+                            <div class="v2v-filter-wrap">
+                                <button type="button" class="v2v-btn v2v-filter-btn" id="v2v-filter-status-btn"
+                                        aria-haspopup="menu" aria-expanded="false" aria-controls="v2v-filter-status-menu">
+                                    <span data-icon="bot" aria-hidden="true"></span>
+                                    <span class="v2v-filter-btn-label">Tất cả trạng thái</span>
+                                    <span class="v2v-filter-caret" aria-hidden="true">&#9662;</span>
+                                </button>
+                                <div class="v2v-upload-menu v2v-filter-menu" id="v2v-filter-status-menu" role="menu" hidden></div>
+                                <select id="v2v-library-status-filter" hidden aria-hidden="true" tabindex="-1">
+                                    <option value="all">Tất cả trạng thái</option>
+                                    <option value="described">Đã mô tả AI</option>
+                                    <option value="undescribed">&#8226; Chưa mô tả</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Thanh hiển thị tiến độ 5 con AI phân tích mô tả video trong kho -->
+                        <div id="v2v-library-ai-progress" class="v2v-library-ai-progress">
+                            <div class="v2v-lib-ai-head">
+                                <span id="v2v-lib-ai-status" class="v2v-lib-ai-status"><span data-icon="bot" aria-hidden="true"></span> 5 AI đang phân tích kho video...</span>
+                                <span id="v2v-lib-ai-percent" class="v2v-lib-ai-percent">0%</span>
+                            </div>
+                            <div class="v2v-lib-ai-track">
+                                <div id="v2v-lib-ai-bar" class="v2v-lib-ai-bar"></div>
+                            </div>
+                            <div id="v2v-lib-ai-details" class="v2v-lib-ai-details"></div>
+                        </div>
+                    </div>
+                    <!-- Controls lọc & tìm kiếm nhanh -->
+                    <div class="v2v-lib-filters" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <div class="v2v-search-wrap" style="position:relative;display:flex;align-items:center;">
+                            <input type="text" id="v2v-library-search" class="v2v-input sm" placeholder="Tìm kiếm clip hoặc ID..." style="width:200px;padding:6px 26px 6px 10px;font-size:0.82rem;" />
+                            <button type="button" id="v2v-library-search-clear" class="v2v-clear-btn" style="position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;display:none;font-size:12px;" title="Xoá tìm kiếm" aria-label="Xoá tìm kiếm"><span data-icon="x" aria-hidden="true"></span></button>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label for="v2v-library-pagesize" style="font-size:0.8rem;color:var(--text-secondary);white-space:nowrap;">Mỗi trang:</label>
+                            <select id="v2v-library-pagesize" class="v2v-select sm" style="width:auto;padding:6px 8px;font-size:0.82rem;">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="v2v-stats" id="v2v-stats"></div>
+                <div class="v2v-asset-grid" id="v2v-asset-grid">
+                    <div class="v2v-empty">Chưa có clip nào. Bấm "Tải video vào kho" để thêm.</div>
+                </div>
+
+                <!-- Thanh phân trang (Pagination Bar) cho Index DB -->
+                <div id="v2v-library-pagination" class="v2v-pagination" style="display:none;">
+                    <div class="v2v-pagination-info" id="v2v-page-info">Hiển thị 0 / 0 clip</div>
+                    <div class="v2v-pagination-controls" id="v2v-page-controls">
+                        <button type="button" class="pagination-btn" id="v2v-page-first" title="Trang đầu">«</button>
+                        <button type="button" class="pagination-btn" id="v2v-page-prev" title="Trang trước">‹ Trước</button>
+                        <div class="v2v-page-numbers" id="v2v-page-numbers" style="display:inline-flex;gap:4px;align-items:center;"></div>
+                        <button type="button" class="pagination-btn" id="v2v-page-next" title="Trang sau">Tiếp ›</button>
+                        <button type="button" class="pagination-btn" id="v2v-page-last" title="Trang cuối">»</button>
+                    </div>
+                    <div class="v2v-page-jump">
+                        <span>Đến trang:</span>
+                        <input type="number" id="v2v-page-jump-input" class="v2v-input sm" min="1" value="1" style="width:52px;text-align:center;padding:4px 6px;font-size:0.82rem;" />
+                        <button type="button" class="pagination-btn sm" id="v2v-page-jump-btn">Đi</button>
+                    </div>
+                </div>
+            </section>
+                <!-- HÀNG ĐỢI DỰNG VIDEO (dùng chung cho cả công ty) — FIFO theo thứ tự bấm -->
+                <section class="v2v-card" id="v2v-queue-card">
+                    <div class="v2v-card-head">
+                        <h2><span data-icon="clipboard-list" aria-hidden="true"></span> Hàng đợi dựng video</h2>
+                    </div>
+                    <div class="v2v-queue-summary" id="v2v-queue-summary">Đang tải hàng đợi…</div>
+                    <div class="v2v-queue-list" id="v2v-queue-list"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Xem Video & Toàn bộ mô tả AI (SRS §4) -->
+    <div id="v2v-asset-modal" class="v2v-modal" hidden>
+        <div class="v2v-modal-backdrop" id="v2v-modal-close-backdrop"></div>
+        <div class="v2v-modal-content">
+            <div class="v2v-modal-head">
+                <div class="v2v-modal-title-box">
+                    <h3 id="v2v-modal-title">Tên video</h3>
+                    <span class="v2v-chip" id="v2v-modal-id">#id</span>
+                    <span class="v2v-chip strong" id="v2v-modal-category">Danh mục</span>
+                </div>
+                <button class="v2v-modal-close" id="v2v-modal-close-btn" title="Đóng" aria-label="Đóng"><span data-icon="x" aria-hidden="true"></span></button>
+            </div>
+            
+            <div class="v2v-modal-body">
+                <!-- Video player phát trực tiếp từ kho -->
+                <div class="v2v-modal-player-wrap">
+                    <video id="v2v-modal-video" controls playsinline preload="metadata" class="v2v-modal-video"></video>
+                </div>
+
+                <!-- Thanh trạng thái phân tích & nút hành động -->
+                <div class="v2v-modal-toolbar">
+                    <div class="v2v-modal-meta" id="v2v-modal-meta">
+                        <!-- Duration, resolution, fps, file size -->
+                    </div>
+                    <div class="v2v-modal-actions">
+                        <button class="v2v-btn primary" id="v2v-modal-analyze-btn"><span data-icon="bot" aria-hidden="true"></span> AI Phân tích mô tả video này</button>
+                    </div>
+                </div>
+
+                <div class="v2v-alert-box info" id="v2v-modal-status" hidden></div>
+
+                <!-- Khung Tóm tắt AI -->
+                <div class="v2v-modal-section">
+                    <h4><span data-icon="lightbulb" aria-hidden="true"></span> Tóm tắt nội dung video (AI Summary)</h4>
+                    <div class="v2v-modal-summary" id="v2v-modal-summary">
+                        Chưa có mô tả AI. Bấm "AI Phân tích mô tả video này" để bắt đầu.
+                    </div>
+                </div>
+
+                <!-- Bảng Chỉ mục mô tả theo từng giây (Media Description Index - SRS §4) -->
+                <div class="v2v-modal-section">
+                    <h4><span aria-hidden="true">⏱️</span> Chỉ mục mô tả chi tiết theo từng giây (Media Description Index — SRS §4)</h4>
+                    <p class="v2v-hint">Bấm vào mốc thời gian để tua video phát ngay đoạn tương ứng.</p>
+                    <div class="v2v-table-wrap">
+                        <table class="v2v-table" id="v2v-modal-events-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 130px;">Mốc thời gian</th>
+                                    <th style="width: 140px;">Phân cảnh / Scene</th>
+                                    <th>Mô tả chi tiết hành động & hình ảnh</th>
+                                    <th>Chủ thể / Vật thể / Text</th>
+                                </tr>
+                            </thead>
+                            <tbody id="v2v-modal-events-tbody">
+                                <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Chưa có dữ liệu phân tích từng giây.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/studio/icons.js"></script>
+    <script src="/studio/video-to-video.js"></script>
+</body>
+</html>
